@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Task, TaskStatus } from "@/lib/types";
-import { mockUsers } from "@/lib/mock-data";
+import { mockUsers, currentUser } from "@/lib/mock-data";
 import { formatDate, getInitials, isOverdue } from "@/lib/utils";
 import { Plus, X, Calendar, Link2, ChevronUp, ChevronDown, Minus, Circle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -167,6 +167,39 @@ function AddTaskDialog({ status, projectId, open, onOpenChange, onAdd }: {
 
 /* ── Task Detail Slide-over (Sheet) ── */
 function TaskDetailSheet({ task, open, onOpenChange }: { task: Task | null; open: boolean; onOpenChange: (o: boolean) => void }) {
+    const [comment, setComment] = useState("");
+    const [messages, setMessages] = useState([
+        {
+            id: 1,
+            type: "system",
+            content: "mengubah status menjadi **In Progress**",
+            user: { name: "Andi Pratama", color: "bg-primary", initial: "A" },
+            time: "2 jam lalu",
+        },
+        {
+            id: 2,
+            type: "user",
+            content: "Mohon update API endpoint ya karena flow login sudah fix. Jangan lupa sinkronisasi dengan *frontend*.",
+            user: { name: "Budi Setiawan", color: "bg-primary text-primary-foreground", initial: "B" },
+            time: "Kemarin, 14:30",
+        }
+    ]);
+
+    const handleSend = () => {
+        if (!comment.trim()) return;
+        setMessages([
+            ...messages,
+            {
+                id: Date.now(),
+                type: "user",
+                content: comment,
+                user: { name: currentUser.name, color: "bg-indigo-500 text-white", initial: getInitials(currentUser.name) },
+                time: "Baru saja",
+            }
+        ]);
+        setComment("");
+    };
+
     if (!task) return null;
     const assignee = task.assigneeId ? mockUsers.find((u) => u.id === task.assigneeId) : null;
     const col = COLS.find((c) => c.id === task.status);
@@ -260,32 +293,69 @@ function TaskDetailSheet({ task, open, onOpenChange }: { task: Task | null; open
                         </TabsContent>
 
                         <TabsContent value="activity" className="m-0 flex flex-col h-[calc(100vh-280px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="relative border-l-2 border-muted ml-3 space-y-8 py-2 flex-1 overflow-y-auto pr-4">
-                                <div className="relative pl-6">
-                                    <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-border ring-4 ring-background" />
-                                    <p className="text-[13px] text-foreground/80">Andi Pratama mengubah status menjadi <span className="font-semibold text-foreground px-1.5 py-0.5 rounded-md bg-muted/50 text-[11px] uppercase tracking-wider ml-1">In Progress</span></p>
-                                    <p className="text-[11px] text-muted-foreground/70 mt-1 uppercase font-medium tracking-wider">2 jam lalu</p>
-                                </div>
-                                <div className="relative pl-6">
-                                    <div className="absolute -left-3.5 top-0">
-                                        <Avatar className="h-7 w-7 ring-4 ring-background"><AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-semibold">B</AvatarFallback></Avatar>
-                                    </div>
-                                    <div className="bg-muted/30 border border-muted/50 rounded-xl p-3.5 text-[13px] shadow-sm">
-                                        <p className="font-semibold mb-1.5 text-foreground/90">Budi Setiawan</p>
-                                        <p className="text-foreground/70 leading-relaxed">Mohon update API endpoint ya karena flow login sudah fix. Jangan lupa sinkronisasi dengan *frontend*.</p>
-                                    </div>
-                                    <p className="text-[11px] text-muted-foreground/70 mt-2 uppercase font-medium tracking-wider pl-1">Kemarin, 14:30</p>
-                                </div>
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-4">
+                                {messages.map((m) => {
+                                    if (m.type === "system") {
+                                        return (
+                                            <div key={m.id} className="flex gap-3 items-center opacity-80">
+                                                <div className="w-8 flex justify-center shrink-0">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                                                </div>
+                                                <div className="flex-1 flex flex-wrap items-center gap-x-1.5">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        <span className="font-medium text-foreground/70">{m.user.name}</span> {m.content.replace(/\*\*(.*?)\*\*/g, "").trim()}
+                                                    </p>
+                                                    <span className="font-semibold text-foreground px-1.5 py-0.5 rounded bg-muted/50 text-[10px] uppercase tracking-wider">
+                                                        {m.content.match(/\*\*(.*?)\*\*/)?.[1] || ""}
+                                                    </span>
+                                                    <span className="text-[10px] text-muted-foreground/50 ml-1">{m.time}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <div key={m.id} className="flex gap-3">
+                                            <Avatar className="h-8 w-8 shrink-0 shadow-sm">
+                                                <AvatarFallback className="text-[10px] font-bold" style={m.user.color.startsWith('bg-') ? {} : { backgroundColor: m.user.color, color: "#fff" }}>
+                                                    {m.user.initial}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 space-y-1.5">
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="font-semibold text-[13px] text-foreground/90">{m.user.name}</span>
+                                                    <span className="text-[10px] text-muted-foreground/60 uppercase font-medium tracking-wider">{m.time}</span>
+                                                </div>
+                                                <div className="bg-muted/30 border border-muted/50 rounded-2xl rounded-tl-sm p-3.5 text-[13px] shadow-sm">
+                                                    <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{m.content}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
 
                             <div className="pt-4 mt-auto border-t shrink-0">
                                 <div className="flex gap-3">
-                                    <Avatar className="h-8 w-8 shrink-0"><AvatarFallback className="text-[10px] bg-secondary text-secondary-foreground font-semibold">M</AvatarFallback></Avatar>
-                                    <div className="flex-1 space-y-3">
-                                        <Textarea placeholder="Tulis komentar atau ketik @ untuk mention..." className="min-h-[80px] resize-none text-[13px] bg-background shadow-sm border-muted-foreground/20 focus-visible:ring-1 transition-all" />
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[11px] text-muted-foreground font-medium">Markdown disupport</span>
-                                            <Button size="sm" className="h-8 px-4 text-xs font-medium shadow-sm">Kirim</Button>
+                                    <Avatar className="h-8 w-8 shrink-0 shadow-sm">
+                                        <AvatarFallback className="text-[10px] font-bold" style={{ backgroundColor: currentUser.color || "#6366f1", color: "#fff" }}>
+                                            {getInitials(currentUser.name)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <div className="relative border border-muted rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background">
+                                            <Textarea
+                                                value={comment}
+                                                onChange={(e) => setComment(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                                                placeholder="Tulis komentar atau ketik @ untuk mention..."
+                                                className="min-h-[90px] w-full resize-none text-[13px] bg-transparent border-0 focus-visible:ring-0 p-3 pb-12"
+                                            />
+                                            <div className="absolute bottom-2 left-3 right-2 flex justify-between items-center bg-background pt-1">
+                                                <span className="text-[10px] text-muted-foreground/70 font-medium">✨ Markdown didukung</span>
+                                                <Button size="sm" onClick={handleSend} disabled={!comment.trim()} className="h-7 px-4 text-xs font-semibold rounded-full shadow-sm">
+                                                    Kirim
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
