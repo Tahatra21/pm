@@ -56,215 +56,231 @@ export default function DashboardPage() {
         <div className="flex flex-col h-full overflow-hidden">
             <Header breadcrumb={[{ label: "Dashboard" }]} />
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Greeting */}
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        {greeting}, {user?.name?.split(" ")[0] || "User"}.
-                    </h1>
-                    <p className="text-slate-500 text-base mt-2">
-                        Ringkasan aktivitas dan progres proyek hari ini.
-                    </p>
-                </div>
+            <div className="flex-1 overflow-y-auto">
+                <div className="max-w-[1400px] mx-auto p-6 lg:p-10 space-y-10">
+                    {/* Greeting */}
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                            {greeting}, {user?.name?.split(" ")[0] || "User"}.
+                        </h1>
+                        <p className="text-slate-500 text-base mt-2">
+                            Ringkasan aktivitas dan progres proyek hari ini.
+                        </p>
+                    </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 stagger">
-                    {stats.map(({ label, value, sub, icon: Icon, color }) => (
-                        <Card key={label} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white rounded-2xl overflow-hidden">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between mb-6">
-                                    <p className="text-[13px] font-semibold text-slate-500 uppercase tracking-widest">{label}</p>
-                                    <div className="p-3 rounded-xl bg-slate-50">
-                                        <Icon size={20} className={color} />
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger">
+                        {stats.map(({ label, value, sub, icon: Icon, color }) => (
+                            <Card key={label} className="border-0 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 bg-white rounded-2xl overflow-hidden">
+                                <CardContent className="p-6">
+                                    <div className="flex items-start justify-between mb-6">
+                                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+                                        <div className="p-2.5 rounded-xl bg-slate-50">
+                                            <Icon size={18} className={color} />
+                                        </div>
                                     </div>
-                                </div>
-                                <p className="text-4xl font-extrabold tracking-tight text-slate-900 mono">{value}</p>
-                                <p className="text-[13px] font-medium text-slate-500 mt-2">{sub}</p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                                    <p className="text-4xl font-extrabold tracking-tight text-slate-900 mono">{value}</p>
+                                    <p className="text-[13px] font-medium text-slate-500 mt-2">{sub}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
 
-                {/* Two column */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    {/* My Tasks */}
-                    <Card className="lg:col-span-3 border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
-                        <CardHeader className="flex-row items-center justify-between pb-4 pt-6 px-6">
-                            <div className="flex items-center gap-2">
-                                <CardTitle className="text-sm">Tugas Aktif Saya</CardTitle>
-                                <Badge variant="secondary" className="text-[10px] font-mono">{pendingMyTasks.length}</Badge>
-                            </div>
-                            <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground" asChild>
-                                <Link href="/my-tasks">Lihat semua <ArrowRight size={12} /></Link>
-                            </Button>
-                        </CardHeader>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="text-xs">Tugas</TableHead>
-                                    <TableHead className="text-xs">Proyek</TableHead>
-                                    <TableHead className="text-xs">Status</TableHead>
-                                    <TableHead className="text-xs">Tenggat</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {pendingMyTasks.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
-                                            Tidak ada tugas aktif 🎉
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    pendingMyTasks.map((task) => {
-                                        const proj = projects.find((p) => p.id === task.projectId);
-                                        const late = task.dueDate && isOverdue(task.dueDate) && task.status !== "done";
-                                        return (
-                                            <TableRow key={task.id} className="cursor-pointer">
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLOR[task.priority] }} />
-                                                        <span className="text-sm truncate max-w-[240px]">{task.title}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {proj && (
-                                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: proj.color }} />
-                                                            {proj.title}
-                                                        </div>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant={STATUS_MAP[task.status]?.variant || "outline"} className="text-[11px]">
-                                                        {STATUS_MAP[task.status]?.label}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {task.dueDate && (
-                                                        <span className={`flex items-center gap-1 text-xs ${late ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                                                            <Calendar size={11} />
-                                                            {formatDate(task.dueDate)}
-                                                        </span>
-                                                    )}
+                    {/* Main Content Grid */}
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                        {/* My Tasks */}
+                        <Card className="xl:col-span-8 border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+                            <CardHeader className="flex-row items-center justify-between pb-4 pt-6 px-6">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-6 bg-primary rounded-full mr-1" />
+                                    <CardTitle className="text-base font-bold">Tugas Aktif Saya</CardTitle>
+                                    <Badge variant="secondary" className="text-[10px] font-mono px-2 py-0.5 rounded-full">{pendingMyTasks.length}</Badge>
+                                </div>
+                                <Button variant="ghost" size="sm" className="text-xs gap-1.5 text-slate-500 hover:text-primary transition-colors" asChild>
+                                    <Link href="/my-tasks">Lihat semua <ArrowRight size={14} /></Link>
+                                </Button>
+                            </CardHeader>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-slate-50/50">
+                                        <TableRow className="hover:bg-transparent border-slate-100">
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6">Tugas</TableHead>
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6">Proyek</TableHead>
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6">Status</TableHead>
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6">Tenggat</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {pendingMyTasks.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="py-12 text-center text-sm text-muted-foreground">
+                                                    Tidak ada tugas aktif 🎉
                                                 </TableCell>
                                             </TableRow>
+                                        ) : (
+                                            pendingMyTasks.map((task) => {
+                                                const proj = projects.find((p) => p.id === task.projectId);
+                                                const late = task.dueDate && isOverdue(task.dueDate) && task.status !== "done";
+                                                return (
+                                                    <TableRow key={task.id} className="cursor-pointer hover:bg-slate-50/50 transition-colors border-slate-50">
+                                                        <TableCell className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLOR[task.priority] }} />
+                                                                <span className="text-sm font-medium text-slate-700 truncate max-w-[280px]">{task.title}</span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="px-6 py-4">
+                                                            {proj && (
+                                                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                                    <span className="w-2.5 h-2.5 rounded-full ring-1 ring-background" style={{ backgroundColor: proj.color }} />
+                                                                    {proj.title}
+                                                                </div>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="px-6 py-4">
+                                                            <Badge variant={STATUS_MAP[task.status]?.variant || "outline"} className="text-[10px] font-bold px-2 py-0.5 rounded-md">
+                                                                {STATUS_MAP[task.status]?.label}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="px-6 py-4">
+                                                            {task.dueDate && (
+                                                                <span className={`flex items-center gap-1.5 text-xs ${late ? "text-destructive font-semibold" : "text-slate-400 font-medium"}`}>
+                                                                    <Calendar size={13} />
+                                                                    {formatDate(task.dueDate)}
+                                                                </span>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </Card>
+
+                        {/* Projects Progress */}
+                        <Card className="xl:col-span-4 border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+                            <CardHeader className="flex-row items-center justify-between pb-4 pt-6 px-6">
+                                <div className="flex items-center gap-2">
+                                    <BarChart2 size={16} className="text-slate-400" />
+                                    <CardTitle className="text-base font-bold">Progres Proyek</CardTitle>
+                                </div>
+                                <Button variant="ghost" size="sm" className="text-xs gap-1.5 text-slate-500 hover:text-primary transition-colors" asChild>
+                                    <Link href="/projects">Semua <ArrowRight size={14} /></Link>
+                                </Button>
+                            </CardHeader>
+                            <div className="divide-y divide-slate-50">
+                                {projects.length === 0 ? (
+                                    <div className="px-6 py-12 text-center text-sm text-slate-400">Belum ada proyek aktif</div>
+                                ) : (
+                                    projects.slice(0, 5).map((proj) => {
+                                        const pct = proj.progress ?? 0;
+                                        const members = users.filter((u: any) => proj.members?.includes(u.id));
+                                        return (
+                                            <Link key={proj.id} href={`/board/${proj.id}`} className="block px-6 py-4 hover:bg-slate-50/50 transition-colors">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className="w-3 h-3 rounded-full ring-2 ring-white shadow-sm" style={{ backgroundColor: proj.color }} />
+                                                        <span className="text-sm font-semibold text-slate-700">{proj.title}</span>
+                                                    </div>
+                                                    <span className="text-sm font-bold mono" style={{ color: proj.color }}>{pct}%</span>
+                                                </div>
+                                                <Progress value={pct} className="h-1.5 mb-3 bg-slate-100" />
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[11px] font-medium text-slate-400">{proj.completedCount}/{proj.taskCount} tugas</span>
+                                                    <div className="flex -space-x-2">
+                                                        {members.slice(0, 3).map((u: any) => (
+                                                            <Avatar key={u.id} className="h-6 w-6 ring-2 ring-white shadow-sm">
+                                                                <AvatarFallback className="text-[9px] text-white font-bold" style={{ backgroundColor: u.color }}>
+                                                                    {getInitials(u.name)}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                        ))}
+                                                        {members.length > 3 && (
+                                                            <Avatar className="h-6 w-6 ring-2 ring-white shadow-sm">
+                                                                <AvatarFallback className="text-[9px] bg-slate-100 text-slate-500 font-bold">
+                                                                    +{members.length - 3}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </Link>
                                         );
                                     })
                                 )}
-                            </TableBody>
-                        </Table>
-                    </Card>
-
-                    {/* Projects */}
-                    <Card className="lg:col-span-2 border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
-                        <CardHeader className="flex-row items-center justify-between pb-4 pt-6 px-6">
-                            <div className="flex items-center gap-2">
-                                <BarChart2 size={14} className="text-muted-foreground" />
-                                <CardTitle className="text-sm">Progres Proyek</CardTitle>
                             </div>
-                            <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground" asChild>
-                                <Link href="/projects">Semua <ArrowRight size={12} /></Link>
-                            </Button>
-                        </CardHeader>
-                        <div className="divide-y">
-                            {projects.map((proj) => {
-                                const pct = proj.progress ?? 0;
-                                const members = users.filter((u: any) => proj.members?.includes(u.id));
-                                return (
-                                    <Link key={proj.id} href={`/board/${proj.id}`} className="block px-6 py-3.5 hover:bg-accent/50 transition-colors">
-                                        <div className="flex items-center justify-between mb-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-3 h-3 rounded-full ring-1 ring-background" style={{ backgroundColor: proj.color }} />
-                                                <span className="text-sm font-medium">{proj.title}</span>
-                                            </div>
-                                            <span className="text-sm font-semibold mono" style={{ color: proj.color }}>{pct}%</span>
-                                        </div>
-                                        <Progress value={pct} className="h-1.5 mb-2.5" />
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-muted-foreground">{proj.completedCount}/{proj.taskCount} tugas</span>
-                                            <div className="flex -space-x-1.5">
-                                                {members.slice(0, 3).map((u: any) => (
-                                                    <Avatar key={u.id} className="h-5 w-5 ring-2 ring-card">
-                                                        <AvatarFallback className="text-[8px] text-white font-semibold" style={{ backgroundColor: u.color }}>
-                                                            {getInitials(u.name)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                ))}
-                                                {members.length > 3 && (
-                                                    <Avatar className="h-5 w-5 ring-2 ring-card">
-                                                        <AvatarFallback className="text-[8px] bg-muted text-muted-foreground font-semibold">
-                                                            +{members.length - 3}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    </Card>
-                </div>
+                        </Card>
 
-                {/* Team Workload */}
-                <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
-                    <CardHeader className="flex-row items-center gap-2 pb-4 pt-6 px-6">
-                        <Clock size={14} className="text-muted-foreground" />
-                        <CardTitle className="text-sm">Beban Kerja Tim</CardTitle>
-                    </CardHeader>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="text-xs">Anggota</TableHead>
-                                <TableHead className="text-xs">Total</TableHead>
-                                <TableHead className="text-xs">Progress</TableHead>
-                                <TableHead className="text-xs text-right">Selesai</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.map((u: any) => {
-                                const ut = allTasks.filter((t) => t.assigneeId === u.id);
-                                const doneN = ut.filter((t) => t.status === "done").length;
-                                const inPrN = ut.filter((t) => t.status === "in-progress").length;
-                                const total = ut.length;
-                                const pct = calculateProgress(ut);
-                                return (
-                                    <TableRow key={u.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2.5">
-                                                <Avatar className="h-7 w-7">
-                                                    <AvatarFallback className="text-[10px] text-white font-semibold" style={{ backgroundColor: u.color }}>
-                                                        {getInitials(u.name)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="text-sm font-medium">{u.name}</p>
-                                                    <p className="text-[11px] text-muted-foreground capitalize">{u.role}</p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-sm text-muted-foreground mono">{total} tugas</span>
-                                        </TableCell>
-                                        <TableCell className="w-52">
-                                            <Progress value={pct} className="h-1.5 mb-1" />
-                                            <div className="flex gap-2 text-xs">
-                                                <span className="text-emerald-500">{doneN} selesai</span>
-                                                <span className="text-muted-foreground">·</span>
-                                                <span className="text-chart-1">{inPrN} aktif</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <span className={`text-sm font-semibold mono ${pct >= 80 ? "text-emerald-500" : pct >= 40 ? "text-amber-500" : "text-muted-foreground"}`}>
-                                                {pct}%
-                                            </span>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </Card>
+                        {/* Team Workload */}
+                        <Card className="xl:col-span-12 border-0 shadow-sm rounded-2xl overflow-hidden bg-white mt-2">
+                            <CardHeader className="flex-row items-center gap-2 pb-4 pt-6 px-6">
+                                <Clock size={16} className="text-slate-400" />
+                                <CardTitle className="text-base font-bold">Beban Kerja Tim</CardTitle>
+                            </CardHeader>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-slate-50/50">
+                                        <TableRow className="hover:bg-transparent border-slate-100">
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6">Anggota</TableHead>
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6">Total Tugas</TableHead>
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6">Progress</TableHead>
+                                            <TableHead className="text-[11px] uppercase tracking-wider font-bold text-slate-400 h-10 px-6 text-right">Efisiensi</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {users.map((u: any) => {
+                                            const ut = allTasks.filter((t) => t.assigneeId === u.id);
+                                            const doneN = ut.filter((t) => t.status === "done").length;
+                                            const inPrN = ut.filter((t) => t.status === "in-progress").length;
+                                            const total = ut.length;
+                                            const pct = calculateProgress(ut);
+                                            return (
+                                                <TableRow key={u.id} className="hover:bg-slate-50/30 border-slate-50">
+                                                    <TableCell className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="h-9 w-9 ring-1 ring-slate-100">
+                                                                <AvatarFallback className="text-[11px] text-white font-bold" style={{ backgroundColor: u.color }}>
+                                                                    {getInitials(u.name)}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <p className="text-sm font-bold text-slate-700">{u.name}</p>
+                                                                <p className="text-[11px] text-slate-400 font-medium capitalize">{u.role}</p>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm font-semibold text-slate-600 mono">{total}</span>
+                                                            <span className="text-[11px] text-slate-400 font-medium">tugas</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-4 w-[360px]">
+                                                        <div className="space-y-1.5">
+                                                            <Progress value={pct} className="h-1.5 bg-slate-100" />
+                                                            <div className="flex gap-3 text-[10px] font-bold">
+                                                                <span className="text-emerald-500 uppercase tracking-tighter">{doneN} SELESAI</span>
+                                                                <span className="text-slate-300">|</span>
+                                                                <span className="text-sky-500 uppercase tracking-tighter">{inPrN} AKTIF</span>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-4 text-right">
+                                                        <div className={`text-sm font-black mono ${pct >= 80 ? "text-emerald-500" : pct >= 40 ? "text-amber-500" : "text-slate-400"}`}>
+                                                            {pct}%
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
             </div>
         </div>
     );
