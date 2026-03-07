@@ -69,6 +69,9 @@ erDiagram
         string password_hash
         string role
         string color
+        string avatar
+        datetime created_at
+        datetime updated_at
     }
     
     PROJECTS {
@@ -76,6 +79,14 @@ erDiagram
         string title
         text description
         string color
+        datetime created_at
+        datetime updated_at
+    }
+
+    PROJECT_MEMBERS {
+        uuid id PK
+        uuid project_id FK
+        uuid user_id FK
     }
     
     TASKS {
@@ -84,10 +95,14 @@ erDiagram
         uuid assignee_id FK
         string title
         text description
-        string status "todo, in-progress, review, done"
-        string priority "low, medium, high, urgent"
+        string status
+        string priority
         datetime due_date
         datetime start_date
+        string tags
+        string git_link
+        datetime created_at
+        datetime updated_at
     }
     
     SESSIONS {
@@ -95,6 +110,15 @@ erDiagram
         uuid user_id FK
         string token UK
         datetime expires_at
+        datetime created_at
+    }
+
+    INTEGRATIONS {
+        uuid id PK
+        uuid task_id FK
+        string platform
+        string link
+        string pr_status
     }
 ```
 

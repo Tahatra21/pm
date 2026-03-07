@@ -109,6 +109,9 @@ erDiagram
         text password_hash
         text role
         text color
+        text avatar
+        text created_at
+        text updated_at
     }
     
     PROJECTS {
@@ -116,6 +119,14 @@ erDiagram
         text title
         text description
         text color
+        text created_at
+        text updated_at
+    }
+
+    PROJECT_MEMBERS {
+        text id PK
+        text project_id FK
+        text user_id FK
     }
     
     TASKS {
@@ -127,6 +138,10 @@ erDiagram
         text priority
         text due_date
         text start_date
+        text tags
+        text git_link
+        text created_at
+        text updated_at
     }
     
     SESSIONS {
@@ -134,6 +149,15 @@ erDiagram
         text user_id FK
         text token UK
         text expires_at
+        text created_at
+    }
+
+    INTEGRATIONS {
+        text id PK
+        text task_id FK
+        text platform
+        text link
+        text pr_status
     }
 ```
 
