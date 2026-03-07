@@ -1,0 +1,117 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - Next.js
+  - React
+  - Tailwind CSS
+routes:
+  - path: /login
+    file: app/(auth)/login/page.tsx
+    auth_required: false
+    description: User login page
+  - path: /register
+    file: app/(auth)/register/page.tsx
+    auth_required: false
+    description: User registration page
+  - path: /
+    file: app/(dashboard)/page.tsx
+    auth_required: true
+    description: Main dashboard page
+  - path: /board
+    file: app/(dashboard)/board/page.tsx
+    auth_required: true
+    description: Board view page
+  - path: /my-tasks
+    file: app/(dashboard)/my-tasks/page.tsx
+    auth_required: true
+    description: My tasks tracking page
+  - path: /projects
+    file: app/(dashboard)/projects/page.tsx
+    auth_required: true
+    description: Projects list and management page
+  - path: /settings
+    file: app/(dashboard)/settings/page.tsx
+    auth_required: true
+    description: User and system settings page
+features:
+  - name: User Login
+    description: Login with credentials
+    files:
+      - app/(auth)/login/page.tsx
+    entry_route: /login
+    user_interactions:
+      - Fill email input field
+      - Fill password input field
+      - Click Login button to submit
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/login
+    auth_required: false
+  - name: User Registration
+    description: Register a new account
+    files:
+      - app/(auth)/register/page.tsx
+    entry_route: /register
+    user_interactions:
+      - Fill registration details
+      - Click Register button to submit
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/register
+    auth_required: false
+  - name: Dashboard Viewing
+    description: View overall metrics and dashboard widgets
+    files:
+      - app/(dashboard)/page.tsx
+    entry_route: /
+    user_interactions:
+      - View charts and data
+      - Interact with widgets
+    api_calls: []
+    auth_required: true
+  - name: Board Management
+    description: Kanban style board for tasks
+    files:
+      - app/(dashboard)/board/page.tsx
+    entry_route: /board
+    user_interactions:
+      - Drag and drop tasks
+      - Create new tasks
+      - Update task status
+    api_calls: []
+    auth_required: true
+  - name: My Tasks
+    description: View assigned tasks
+    files:
+      - app/(dashboard)/my-tasks/page.tsx
+    entry_route: /my-tasks
+    user_interactions:
+      - View task list
+      - Filter tasks
+      - Mark tasks as complete
+    api_calls: []
+    auth_required: true
+  - name: Project Management
+    description: View and manage projects
+    files:
+      - app/(dashboard)/projects/page.tsx
+    entry_route: /projects
+    user_interactions:
+      - View list of projects
+      - Click project to see details
+      - Create new project
+    api_calls: []
+    auth_required: true
+  - name: Settings
+    description: Configure application settings
+    files:
+      - app/(dashboard)/settings/page.tsx
+    entry_route: /settings
+    user_interactions:
+      - Update profile
+      - Modify preferences
+      - Save settings
+    api_calls: []
+    auth_required: true
+known_limitations: []
