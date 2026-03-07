@@ -20,23 +20,38 @@ Kombinasi teknologi berikut dipilih untuk memastikan performa tinggi, skalabilit
 
 ## 2. UI/UX Specification
 
-Fokus utama adalah **kecepatan (Speed)** dan **kerapian (Clarity)**.
+Antarmuka dirancang untuk produktivitas tinggi dengan estetika modern (*Linear-style*).
 
-*   **3-Layer Layout:** Sidebar persisten (navigasi), Top Bar (pencarian & profil), dan Workspace (area kerja utama).
-*   **Keyboard-First:** Dukungan *Command Palette* (CMD+K) untuk pembuatan tugas atau navigasi cepat tanpa mouse.
-*   **Kontekstual:** Task Detail muncul sebagai *slide-over panel* agar pengguna tidak kehilangan konteks saat bekerja di papan Kanban.
-*   **Micro-interactions:** Animasi halus pada transisi status tugas (*drag-and-drop*) dan *loading states* skeleton untuk memberikan feedback instan.
+### A. Arsitektur Layout (Three-Layer)
+1.  **Sidebar (Navigasi):** Persisten di sisi kiri, dapat disiutkan (*collapsible*). Berisi menu utama: Home, My Tasks, Projects, Teams, Analytics, dan Settings. Di bagian bawah terdapat *Workspace Switcher* dan *User Profile*.
+2.  **Top Navigation Bar:** Berisi bilah pencarian global, pemicu *Command Palette* (CMD+K), ikon notifikasi real-time, dan tombol "Quick Create Task".
+3.  **Main Workspace:** Area konten dinamis yang menggunakan *scroll-area* terpisah untuk menjaga orientasi pengguna.
+
+### B. Komponen & Interaksi Kunci
+*   **Kanban Board:** Sistem *drag-and-drop* menggunakan `@hello-pangea/dnd`. Kartu tugas menampilkan prioritas (warna), *assignee* (avatar), dan *due date*.
+*   **Task Detail Panel:** Menggunakan *Sheet/Slide-over* dari Shadcn UI. Memungkinkan pengeditan deskripsi (Markdown), manajemen sub-tugas (Checklist), dan melihat *Activity Log* tanpa meninggalkan konteks papan.
+*   **Command Palette (Quick Actions):** Integrasi `cmdk` untuk navigasi antar proyek, pencarian tugas global, dan perintah cepat seperti "Create Task" atau "Change Status".
+*   **Design System:** Menggunakan *Outfit* sebagai font utama untuk keterbacaan dan *JetBrains Mono* untuk data teknis. Konsistensi warna mengikuti palet sistem yang adaptif (Light/Dark Mode).
 
 ---
 
 ## 3. Fitur Utama & Business Flow
 
-### Skenario Bisnis (Happy Path):
-1.  **Onboarding:** Pengguna login/register dan diarahkan ke Dashboard.
-2.  **Creation:** Manajer membuat Proyek baru dan menambahkan anggota tim.
-3.  **Execution:** Tim membuat Tugas (Tasks) di dalam proyek, menentukan prioritas, dan menugaskannya ke anggota tim.
-4.  **Collaboration:** Status tugas diperbarui via Kanban (Drag-and-Drop). Diskusi dilakukan di kolom komentar tugas.
-5.  **Monitoring:** Manajer memantau beban kerja (Workload) dan rentang waktu (Timeline) untuk memastikan tidak ada keterlambatan.
+### A. Alur Kerja Pengguna (Happy Path)
+1.  **Login & Session:** Pengguna masuk via `/login`. Sistem memvalidasi kredensial dan membuat sesi aman.
+2.  **Personalized Dashboard:** Pengguna melihat *KPI Cards* yang relevan: jumlah tugas aktif mereka, tugas yang mendekati tenggat (*Upcoming*), dan ringkasan aktivitas tim.
+3.  **Project Navigation:** Memilih proyek dari Sidebar. Masuk ke tampilan *Board* atau *Timeline*.
+4.  **Task Life-cycle:**
+    *   **Create:** Klik "Add Task", isi detail, pilih *assignee*.
+    *   **Execute:** Ubah status dari `Todo` ke `In-Progress`.
+    *   **Git Sync:** Jika deskripsi mengandung tautan commit, status akan diperbarui otomatis via integrasi webhook/API.
+    *   **Review & Complete:** Tugas dipindah ke `Review` untuk dicek manajer, lalu ke `Done`.
+5.  **Analytics & Reporting:** Manajer mengakses halaman *Analytics* untuk melihat *Cycle Time* (waktu rata-rata penyelesaian tugas) dan *Team Workload Heatmap*.
+
+### B. Fitur Unggulan
+*   **Multi-View Project:** Berpindah seketika antara List View, Kanban Board, dan Timeline (Gantt Chart).
+*   **Real-time Collaboration:** Indikator keberadaan user dan pembaruan status tugas secara instan tanpa *refresh* (Optimistic UI updates).
+*   **Integrasi Git Otomatis:** Menghubungkan tugas langsung dengan status Pull Request di GitLab/GitHub internal.
 
 ---
 
