@@ -297,18 +297,22 @@ function TaskDetailSheet({ task, open, onOpenChange }: { task: Task | null; open
                                 {messages.map((m) => {
                                     if (m.type === "system") {
                                         return (
-                                            <div key={m.id} className="flex gap-3 items-center opacity-80">
-                                                <div className="w-8 flex justify-center shrink-0">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
-                                                </div>
-                                                <div className="flex-1 flex flex-wrap items-center gap-x-1.5">
-                                                    <p className="text-xs text-muted-foreground">
-                                                        <span className="font-medium text-foreground/70">{m.user.name}</span> {m.content.replace(/\*\*(.*?)\*\*/g, "").trim()}
-                                                    </p>
-                                                    <span className="font-semibold text-foreground px-1.5 py-0.5 rounded bg-muted/50 text-[10px] uppercase tracking-wider">
-                                                        {m.content.match(/\*\*(.*?)\*\*/)?.[1] || ""}
-                                                    </span>
-                                                    <span className="text-[10px] text-muted-foreground/50 ml-1">{m.time}</span>
+                                            <div key={m.id} className="flex gap-3 items-start opacity-80">
+                                                <Avatar className="h-8 w-8 shrink-0">
+                                                    <AvatarFallback className="text-[10px] font-bold" style={{ backgroundColor: "#9CA3AF", color: "#fff" }}>S</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1">
+                                                    <div className="bg-muted/20 rounded-xl p-3">
+                                                        <p className="text-xs text-muted-foreground mb-1">
+                                                            <span className="font-medium text-foreground/70">{m.user.name}</span> {m.content.replace(/\*\*(.*?)\*\*/g, "").trim()}
+                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-semibold text-foreground px-1.5 py-0.5 rounded bg-muted/50 text-[10px] uppercase tracking-wider">
+                                                                {m.content.match(/\*\*(.*?)\*\*/)?.[1] || ""}
+                                                            </span>
+                                                            <span className="text-[10px] text-muted-foreground/50 ml-1">{m.time}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
