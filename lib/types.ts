@@ -46,6 +46,26 @@ export interface Integration {
   prStatus?: 'open' | 'merged' | 'closed';
 }
 
+export interface Subtask {
+  id: string;
+  taskId: string;
+  title: string;
+  completed: boolean;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface Comment {
+  id: string;
+  taskId: string;
+  userId: string;
+  userName?: string;
+  userColor?: string;
+  content: string;
+  type: 'comment' | 'system';
+  createdAt: string;
+}
+
 export type KanbanColumn = {
   id: TaskStatus;
   title: string;

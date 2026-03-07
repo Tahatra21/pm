@@ -1,39 +1,51 @@
 "use client";
 
 import Header from "@/components/layout/header";
-import { currentUser } from "@/lib/mock-data";
-import { User, Bell, Shield, ChevronRight } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { User, Bell, Shield, ChevronRight, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-
-const settingsGroups = [
-    {
-        label: "Profil", icon: User,
-        items: [
-            { label: "Nama Lengkap", value: currentUser.name },
-            { label: "Email", value: currentUser.email },
-            { label: "Role", value: currentUser.role },
-        ],
-    },
-    {
-        label: "Notifikasi", icon: Bell,
-        items: [
-            { label: "Email Tugas Baru", value: "Aktif" },
-            { label: "Pengingat Tenggat", value: "Aktif" },
-            { label: "Update Status", value: "Nonaktif" },
-        ],
-    },
-    {
-        label: "Keamanan", icon: Shield,
-        items: [
-            { label: "Autentikasi", value: "Email/Password" },
-            { label: "SSO Internal", value: "Terhubung" },
-            { label: "Sesi Aktif", value: "1 perangkat" },
-        ],
-    },
-];
 
 export default function SettingsPage() {
+    const { user, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="flex flex-col h-full overflow-hidden">
+                <Header breadcrumb={[{ label: "Dashboard", href: "/" }, { label: "Pengaturan" }]} />
+                <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                    <Loader2 className="animate-spin mr-2" size={18} /> Memuat profil...
+                </div>
+            </div>
+        );
+    }
+
+    const settingsGroups = [
+        {
+            label: "Profil", icon: User,
+            items: [
+                { label: "Nama Lengkap", value: user?.name || "-" },
+                { label: "Email", value: user?.email || "-" },
+                { label: "Role", value: user?.role || "-" },
+            ],
+        },
+        {
+            label: "Notifikasi", icon: Bell,
+            items: [
+                { label: "Email Tugas Baru", value: "Aktif" },
+                { label: "Pengingat Tenggat", value: "Aktif" },
+                { label: "Update Status", value: "Nonaktif" },
+            ],
+        },
+        {
+            label: "Keamanan", icon: Shield,
+            items: [
+                { label: "Autentikasi", value: "Email/Password" },
+                { label: "SSO Internal", value: "Terhubung" },
+                { label: "Sesi Aktif", value: "1 perangkat" },
+            ],
+        },
+    ];
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <Header breadcrumb={[{ label: "Dashboard", href: "/" }, { label: "Pengaturan" }]} />

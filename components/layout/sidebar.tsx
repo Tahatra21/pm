@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, FolderOpen, CheckSquare, Settings, ChevronDown, Zap, PanelLeftClose, PanelLeftOpen, LogOut, User } from "lucide-react";
-import { mockProjects, currentUser } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth-context";
 import { cn, getInitials } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 
 const NAV = [
     { href: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -27,10 +26,35 @@ const NAV = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const { user } = useAuth();
     const [projOpen, setProjOpen] = useState(true);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [prefsOpen, setPrefsOpen] = useState(false);
+    const [projects, setProjects] = useState<Array<{ id: string; title: string; color: string; taskCount: number; completedCount: number }>>([]);
+
+    useEffect(() => {
+        const fetchProjects = () => {
+            fetch("/api/projects")
+                .then(r => r.json())
+                .then(data => { if (Array.isArray(data)) setProjects(data); })
+                .catch(() => {});
+        };
+
+        fetchProjects();
+
+        // 1. Polling every 10 seconds
+        const interval = setInterval(fetchProjects, 10000);
+
+        // 2. Custom event listener for immediate refresh
+        window.addEventListener("refresh-projects", fetchProjects);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener("refresh-projects", fetchProjects);
+        };
+    }, []);
 
     return (
         <aside className={cn(
@@ -128,9 +152,9 @@ export default function Sidebar() {
 
                     {(projOpen || isCollapsed) && (
                         <div className="space-y-1">
-                            {mockProjects.map((proj) => {
+                            {projects.map((proj) => {
                                 const active = pathname.includes(proj.id);
-                                const pct = proj.taskCount > 0 ? Math.round((proj.completedCount / proj.taskCount) * 100) : 0;
+                                const pct = (proj as any).progress ?? 0;
 
                                 const ProjLink = (
                                     <Link
@@ -196,16 +220,16 @@ export default function Sidebar() {
                                 <AvatarFallback
                                     className="text-xs font-bold text-white bg-slate-800"
                                 >
-                                    {getInitials(currentUser.name)}
+                                    {user ? getInitials(user.name) : "?"}
                                 </AvatarFallback>
                             </Avatar>
                             {!isCollapsed && (
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-semibold text-slate-900 truncate leading-tight">
-                                        {currentUser.name}
+                                        {user?.name || "Loading..."}
                                     </p>
                                     <p className="text-[11px] text-slate-500 font-medium truncate capitalize mt-0.5">
-                                        {currentUser.role}
+                                        {user?.role || ""}
                                     </p>
                                 </div>
                             )}
@@ -238,10 +262,10 @@ export default function Sidebar() {
                     </div>
                     <div className="bg-slate-50 p-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                         <Button variant="outline" className="w-full sm:w-auto font-semibold bg-white border-slate-200 text-slate-700 hover:bg-slate-100" onClick={() => setLogoutOpen(false)}>Batal</Button>
-                        <Button variant="destructive" className="w-full sm:w-auto font-semibold bg-red-600 hover:bg-red-700 shadow-sm" onClick={() => {
-                            // Implement actual logout logic here
+                        <Button variant="destructive" className="w-full sm:w-auto font-semibold bg-red-600 hover:bg-red-700 shadow-sm" onClick={async () => {
+                            await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
                             setLogoutOpen(false);
-                            window.location.href = "/login";
+                            router.push("/login");
                         }}>Ya, Keluar</Button>
                     </div>
                 </DialogContent>
@@ -266,11 +290,11 @@ export default function Sidebar() {
                             <div className="grid gap-4">
                                 <div className="space-y-1.5">
                                     <Label className="text-slate-700 font-medium">Nama Lengkap</Label>
-                                    <Input defaultValue={currentUser.name} className="bg-white border-slate-200 shadow-sm" />
+                                    <Input defaultValue={user?.name || ""} className="bg-white border-slate-200 shadow-sm" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label className="text-slate-700 font-medium">Email</Label>
-                                    <Input defaultValue={currentUser.email} disabled className="bg-slate-100 border-slate-200 text-slate-500 shadow-none cursor-not-allowed" />
+                                    <Input defaultValue={user?.email || ""} disabled className="bg-slate-100 border-slate-200 text-slate-500 shadow-none cursor-not-allowed" />
                                 </div>
                             </div>
                         </div>

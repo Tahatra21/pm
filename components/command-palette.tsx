@@ -12,11 +12,19 @@ import {
     CommandSeparator,
 } from "@/components/ui/command";
 import { Search, FolderOpen, CheckSquare, Settings, User } from "lucide-react";
-import { mockProjects, mockTasks } from "@/lib/mock-data";
 
 export function CommandPalette() {
     const [open, setOpen] = useState(false);
+    const [projects, setProjects] = useState<any[]>([]);
+    const [tasks, setTasks] = useState<any[]>([]);
     const router = useRouter();
+
+    useEffect(() => {
+        if (open) {
+            fetch("/api/projects").then(r => r.json()).then(data => { if (Array.isArray(data)) setProjects(data); }).catch(() => {});
+            fetch("/api/tasks").then(r => r.json()).then(data => { if (Array.isArray(data)) setTasks(data); }).catch(() => {});
+        }
+    }, [open]);
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
@@ -78,7 +86,7 @@ export function CommandPalette() {
                 <CommandSeparator />
 
                 <CommandGroup heading="Proyek Aktif">
-                    {mockProjects.slice(0, 4).map((p) => (
+                    {projects.slice(0, 4).map((p) => (
                         <CommandItem key={p.id} onSelect={() => runCommand(() => router.push(`/board/${p.id}`))}>
                             <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: p.color }} />
                             <span>{p.title}</span>
@@ -89,7 +97,7 @@ export function CommandPalette() {
                 <CommandSeparator />
 
                 <CommandGroup heading="Tugas Terbaru">
-                    {mockTasks.slice(0, 5).map((t) => (
+                    {tasks.slice(0, 5).map((t) => (
                         <CommandItem key={t.id} onSelect={() => runCommand(() => router.push(`/board/${t.projectId}`))}>
                             <CheckSquare className="mr-2 h-4 w-4 text-muted-foreground" />
                             <span className="truncate">{t.title}</span>

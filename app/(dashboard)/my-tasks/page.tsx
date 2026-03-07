@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/header";
-import { mockTasks, mockProjects, currentUser } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth-context";
 import { formatDate, isOverdue } from "@/lib/utils";
 import { Calendar, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,11 +21,18 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 const PRIORITY_COLOR: Record<string, string> = { low: "#6b7280", medium: "#eab308", high: "#f97316", urgent: "#ef4444" };
 
 export default function MyTasksPage() {
+    const { user } = useAuth();
     const [filter, setFilter] = useState("all");
     const [selectedTask, setSelectedTask] = useState<any>(null);
-    const [refresh, setRefresh] = useState(0);
+    const [allTasks, setAllTasks] = useState<any[]>([]);
+    const [projects, setProjects] = useState<any[]>([]);
 
-    const myTasks = mockTasks.filter((t) => t.assigneeId === currentUser.id);
+    useEffect(() => {
+        fetch("/api/tasks").then(r => r.json()).then(data => { if (Array.isArray(data)) setAllTasks(data); }).catch(() => {});
+        fetch("/api/projects").then(r => r.json()).then(data => { if (Array.isArray(data)) setProjects(data); }).catch(() => {});
+    }, []);
+
+    const myTasks = allTasks.filter((t) => t.assigneeId === user?.id);
     const pending = myTasks.filter((t) => t.status !== "done");
     const done = myTasks.filter((t) => t.status === "done");
 
@@ -40,6 +47,19 @@ export default function MyTasksPage() {
         { label: "Dikerjakan", value: pending.length, icon: AlertTriangle, color: "text-amber-500" },
         { label: "Selesai", value: done.length, icon: CheckCircle2, color: "text-emerald-500" },
     ];
+
+    const handleMarkDone = async (taskId: string) => {
+        const res = await fetch(`/api/tasks/${taskId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "done" }),
+        });
+        if (res.ok) {
+            setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: "done" } : t));
+            setSelectedTask((prev: any) => prev ? { ...prev, status: "done" } : null);
+            window.dispatchEvent(new CustomEvent("refresh-projects"));
+        }
+    };
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -95,7 +115,7 @@ export default function MyTasksPage() {
                                 </TableRow>
                             ) : (
                                 displayTasks.map((task) => {
-                                    const project = mockProjects.find((p) => p.id === task.projectId);
+                                    const project = projects.find((p: any) => p.id === task.projectId);
                                     const overdue = task.dueDate && isOverdue(task.dueDate) && task.status !== "done";
                                     return (
                                         <TableRow key={task.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedTask(task)}>
@@ -106,7 +126,7 @@ export default function MyTasksPage() {
                                                 <p className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
                                                 {task.tags && task.tags.length > 0 && (
                                                     <div className="flex gap-1 mt-1">
-                                                        {task.tags.slice(0, 2).map((tag) => (
+                                                        {(typeof task.tags === "string" ? JSON.parse(task.tags) : task.tags).slice(0, 2).map((tag: string) => (
                                                             <Badge key={tag} variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">#{tag}</Badge>
                                                         ))}
                                                     </div>
@@ -176,12 +196,7 @@ export default function MyTasksPage() {
                                     className="w-full h-11"
                                     variant={selectedTask.status === "done" ? "secondary" : "default"}
                                     disabled={selectedTask.status === "done"}
-                                    onClick={() => {
-                                        const t = mockTasks.find(t => t.id === selectedTask.id);
-                                        if (t) t.status = "done";
-                                        setRefresh(r => r + 1);
-                                        setSelectedTask({ ...selectedTask, status: "done" });
-                                    }}
+                                    onClick={() => handleMarkDone(selectedTask.id)}
                                 >
                                     <CheckCircle2 size={16} className="mr-2" />
                                     {selectedTask.status === "done" ? "Tugas Sudah Selesai" : "Selesai (Mark complete)"}

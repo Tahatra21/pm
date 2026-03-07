@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Search, Bell, Plus, Command } from "lucide-react";
-import { currentUser } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth-context";
 import { cn, getInitials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -19,6 +19,7 @@ interface HeaderProps {
 }
 
 export default function Header({ breadcrumb, actions }: HeaderProps) {
+    const { user } = useAuth();
     const [showNotif, setShowNotif] = useState(false);
     const [taskOpen, setTaskOpen] = useState(false);
     const [taskTitle, setTaskTitle] = useState("");
@@ -164,9 +165,9 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
                 <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all">
                     <AvatarFallback
                         className="text-[11px] font-semibold text-white"
-                        style={{ backgroundColor: currentUser.color }}
+                        style={{ backgroundColor: user?.color || "#6366f1" }}
                     >
-                        {getInitials(currentUser.name)}
+                        {user ? getInitials(user.name) : "?"}
                     </AvatarFallback>
                 </Avatar>
             </div>

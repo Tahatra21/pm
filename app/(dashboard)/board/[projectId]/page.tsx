@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Header from "@/components/layout/header";
 import KanbanBoard from "@/components/kanban/kanban-board";
 import TimelineView from "@/components/timeline/timeline-view";
-import { mockProjects, getProjectTasks, mockUsers } from "@/lib/mock-data";
 import { getInitials } from "@/lib/utils";
-import { Kanban, GanttChart } from "lucide-react";
+import { Kanban, GanttChart, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -20,10 +19,37 @@ export default function BoardPage() {
     const params = useParams();
     const projectId = params.projectId as string;
     const [view, setView] = useState<ViewMode>("kanban");
+    const [project, setProject] = useState<any>(null);
+    const [users, setUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const project = mockProjects.find((p) => p.id === projectId);
-    const tasks = getProjectTasks(projectId);
-    const members = mockUsers.filter((u) => project?.members.includes(u.id));
+    const fetchData = useCallback(async () => {
+        try {
+            const [pRes, uRes] = await Promise.all([
+                fetch(`/api/projects/${projectId}`),
+                fetch("/api/users")
+            ]);
+            if (pRes.ok) setProject(await pRes.json());
+            if (uRes.ok) setUsers(await uRes.json());
+        } catch (error) {
+            console.error("Failed to fetch board data", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [projectId]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    if (loading) return (
+        <div className="flex flex-col h-full overflow-hidden">
+            <Header breadcrumb={[{ label: "Proyek", href: "/projects" }, { label: "Memuat..." }]} />
+            <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                <Loader2 className="animate-spin mr-2" size={18} /> Memuat data proyek...
+            </div>
+        </div>
+    );
 
     if (!project) return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -32,8 +58,9 @@ export default function BoardPage() {
         </div>
     );
 
-    const done = tasks.filter((t) => t.status === "done").length;
-    const pct = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
+    const tasks = project.tasks || [];
+    const members = users.filter((u) => project.members?.includes(u.id));
+    const pct = project.progress || 0;
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -80,7 +107,11 @@ export default function BoardPage() {
                 }
             />
             <div className="flex-1 overflow-hidden p-4">
-                {view === "kanban" ? <KanbanBoard tasks={tasks} projectId={projectId} /> : <TimelineView tasks={tasks} />}
+                {view === "kanban" ? (
+                    <KanbanBoard tasks={tasks} projectId={projectId} onRefresh={fetchData} />
+                ) : (
+                    <TimelineView tasks={tasks} />
+                )}
             </div>
         </div>
     );

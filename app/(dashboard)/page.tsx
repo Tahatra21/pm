@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/header";
-import { mockProjects, mockTasks, mockUsers, currentUser, getOverdueTasks } from "@/lib/mock-data";
-import { formatDate, getInitials, isOverdue } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
+import { formatDate, getInitials, isOverdue, calculateProgress } from "@/lib/utils";
 import { CheckCircle2, Activity, TrendingUp, AlertTriangle, ArrowRight, Calendar, BarChart2, Clock } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
     todo: { label: "To Do", variant: "outline" },
@@ -25,15 +25,25 @@ const PRIORITY_COLOR: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-    const allTasks = mockTasks;
-    const myTasks = allTasks.filter((t) => t.assigneeId === currentUser.id);
+    const { user } = useAuth();
+    const [allTasks, setAllTasks] = useState<any[]>([]);
+    const [projects, setProjects] = useState<any[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetch("/api/tasks").then(r => r.json()).then(data => { if (Array.isArray(data)) setAllTasks(data); }).catch(() => {});
+        fetch("/api/projects").then(r => r.json()).then(data => { if (Array.isArray(data)) setProjects(data); }).catch(() => {});
+        fetch("/api/users").then(r => r.json()).then(data => { if (Array.isArray(data)) setUsers(data); }).catch(() => {});
+    }, []);
+
+    const myTasks = allTasks.filter((t) => t.assigneeId === user?.id);
     const inProgress = allTasks.filter((t) => t.status === "in-progress");
     const done = allTasks.filter((t) => t.status === "done");
-    const overdue = getOverdueTasks();
+    const overdue = allTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && t.status !== "done");
     const pendingMyTasks = myTasks.filter((t) => t.status !== "done").slice(0, 6);
     const hour = new Date().getHours();
     const greeting = hour < 12 ? "Selamat pagi" : hour < 17 ? "Selamat siang" : "Selamat malam";
-    const complRate = allTasks.length > 0 ? Math.round((done.length / allTasks.length) * 100) : 0;
+    const complRate = calculateProgress(allTasks);
 
     const stats = [
         { label: "Tugas Saya", value: myTasks.length, sub: `${pendingMyTasks.length} aktif`, icon: CheckCircle2, color: "text-primary" },
@@ -50,7 +60,7 @@ export default function DashboardPage() {
                 {/* Greeting */}
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        {greeting}, {currentUser.name.split(" ")[0]}.
+                        {greeting}, {user?.name?.split(" ")[0] || "User"}.
                     </h1>
                     <p className="text-slate-500 text-base mt-2">
                         Ringkasan aktivitas dan progres proyek hari ini.
@@ -106,7 +116,7 @@ export default function DashboardPage() {
                                     </TableRow>
                                 ) : (
                                     pendingMyTasks.map((task) => {
-                                        const proj = mockProjects.find((p) => p.id === task.projectId);
+                                        const proj = projects.find((p) => p.id === task.projectId);
                                         const late = task.dueDate && isOverdue(task.dueDate) && task.status !== "done";
                                         return (
                                             <TableRow key={task.id} className="cursor-pointer">
@@ -157,9 +167,9 @@ export default function DashboardPage() {
                             </Button>
                         </CardHeader>
                         <div className="divide-y">
-                            {mockProjects.map((proj) => {
-                                const pct = proj.taskCount > 0 ? Math.round((proj.completedCount / proj.taskCount) * 100) : 0;
-                                const members = mockUsers.filter((u) => proj.members.includes(u.id));
+                            {projects.map((proj) => {
+                                const pct = proj.progress ?? 0;
+                                const members = users.filter((u: any) => proj.members?.includes(u.id));
                                 return (
                                     <Link key={proj.id} href={`/board/${proj.id}`} className="block px-6 py-3.5 hover:bg-accent/50 transition-colors">
                                         <div className="flex items-center justify-between mb-2.5">
@@ -173,7 +183,7 @@ export default function DashboardPage() {
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-muted-foreground">{proj.completedCount}/{proj.taskCount} tugas</span>
                                             <div className="flex -space-x-1.5">
-                                                {members.slice(0, 3).map((u) => (
+                                                {members.slice(0, 3).map((u: any) => (
                                                     <Avatar key={u.id} className="h-5 w-5 ring-2 ring-card">
                                                         <AvatarFallback className="text-[8px] text-white font-semibold" style={{ backgroundColor: u.color }}>
                                                             {getInitials(u.name)}
@@ -212,24 +222,24 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {mockUsers.map((user) => {
-                                const ut = mockTasks.filter((t) => t.assigneeId === user.id);
+                            {users.map((u: any) => {
+                                const ut = allTasks.filter((t) => t.assigneeId === u.id);
                                 const doneN = ut.filter((t) => t.status === "done").length;
                                 const inPrN = ut.filter((t) => t.status === "in-progress").length;
                                 const total = ut.length;
-                                const pct = total > 0 ? Math.round((doneN / total) * 100) : 0;
+                                const pct = calculateProgress(ut);
                                 return (
-                                    <TableRow key={user.id}>
+                                    <TableRow key={u.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-2.5">
                                                 <Avatar className="h-7 w-7">
-                                                    <AvatarFallback className="text-[10px] text-white font-semibold" style={{ backgroundColor: user.color }}>
-                                                        {getInitials(user.name)}
+                                                    <AvatarFallback className="text-[10px] text-white font-semibold" style={{ backgroundColor: u.color }}>
+                                                        {getInitials(u.name)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="text-sm font-medium">{user.name}</p>
-                                                    <p className="text-[11px] text-muted-foreground capitalize">{user.role}</p>
+                                                    <p className="text-sm font-medium">{u.name}</p>
+                                                    <p className="text-[11px] text-muted-foreground capitalize">{u.role}</p>
                                                 </div>
                                             </div>
                                         </TableCell>

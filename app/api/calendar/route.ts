@@ -9,7 +9,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get("userId");
 
-        let allTasks = db.select().from(tasks).all();
+        let allTasks = await db.select().from(tasks);
         if (userId) allTasks = allTasks.filter((t) => t.assigneeId === userId);
 
         // Filter tasks with due dates
@@ -26,7 +26,8 @@ export async function GET(request: Request) {
         ];
 
         for (const task of tasksWithDates) {
-            const project = db.select().from(projects).where(eq(projects.id, task.projectId)).get();
+            const projResult = await db.select().from(projects).where(eq(projects.id, task.projectId)).limit(1);
+            const project = projResult[0];
             const dueDate = new Date(task.dueDate!);
             const dtStamp = formatICalDate(new Date());
             const dtStart = formatICalDate(dueDate);

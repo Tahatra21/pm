@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/layout/header";
-import { mockProjects as initialProjects, mockUsers } from "@/lib/mock-data";
 import { getInitials } from "@/lib/utils";
 import { Plus, FolderOpen, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -91,28 +89,48 @@ function DeleteDialog({ open, onOpenChange, projectTitle, onConfirm }: {
 }
 
 export default function ProjectsPage() {
-    const [projects, setProjects] = useState<Project[]>(initialProjects);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
     const [showCreate, setShowCreate] = useState(false);
     const [editProject, setEditProject] = useState<Project | null>(null);
     const [deleteProject, setDeleteProject] = useState<Project | null>(null);
 
-    const handleCreate = (data: { title: string; description: string; color: string }) => {
-        const newProj: Project = {
-            id: `p_${Date.now()}`, title: data.title, description: data.description, color: data.color,
-            members: ["u1"], taskCount: 0, completedCount: 0, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-        };
-        setProjects((prev) => [...prev, newProj]);
+    useEffect(() => {
+        fetch("/api/projects").then(r => r.json()).then(data => { if (Array.isArray(data)) setProjects(data); }).catch(() => {});
+        fetch("/api/users").then(r => r.json()).then(data => { if (Array.isArray(data)) setUsers(data); }).catch(() => {});
+    }, []);
+
+    const handleCreate = async (data: { title: string; description: string; color: string }) => {
+        const res = await fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            const newProj = await res.json();
+            setProjects((prev) => [...prev, newProj]);
+        }
     };
 
-    const handleEdit = (data: { title: string; description: string; color: string }) => {
+    const handleEdit = async (data: { title: string; description: string; color: string }) => {
         if (!editProject) return;
-        setProjects((prev) => prev.map((p) => p.id === editProject.id ? { ...p, ...data, updatedAt: new Date().toISOString() } : p));
+        const res = await fetch(`/api/projects/${editProject.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            setProjects((prev) => prev.map((p) => p.id === editProject.id ? { ...p, ...data, updatedAt: new Date().toISOString() } : p));
+        }
         setEditProject(null);
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!deleteProject) return;
-        setProjects((prev) => prev.filter((p) => p.id !== deleteProject.id));
+        const res = await fetch(`/api/projects/${deleteProject.id}`, { method: "DELETE" });
+        if (res.ok) {
+            setProjects((prev) => prev.filter((p) => p.id !== deleteProject.id));
+        }
         setDeleteProject(null);
     };
 
@@ -144,8 +162,8 @@ export default function ProjectsPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {projects.map((proj) => {
-                                        const pct = proj.taskCount > 0 ? Math.round((proj.completedCount / proj.taskCount) * 100) : 0;
-                                        const members = mockUsers.filter((u) => proj.members.includes(u.id));
+                                        const pct = (proj as any).progress ?? 0;
+                                        const members = users.filter((u: any) => proj.members?.includes(u.id));
                                         return (
                                             <TableRow key={proj.id} className="cursor-pointer group">
                                                 <TableCell>
@@ -167,7 +185,7 @@ export default function ProjectsPage() {
                                                 </TableCell>
                                                 <TableCell className="hidden sm:table-cell">
                                                     <div className="flex -space-x-1.5">
-                                                        {members.slice(0, 5).map((u) => (
+                                                        {members.slice(0, 5).map((u: any) => (
                                                             <Avatar key={u.id} className="h-6 w-6 ring-2 ring-card">
                                                                 <AvatarFallback className="text-[9px] text-white font-semibold" style={{ backgroundColor: u.color }}>{getInitials(u.name)}</AvatarFallback>
                                                             </Avatar>

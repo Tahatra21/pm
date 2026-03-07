@@ -40,3 +40,15 @@ export function isOverdue(dateStr: string): boolean {
     return false;
   }
 }
+export const STATUS_WEIGHTS: Record<string, number> = {
+  todo: 10,
+  "in-progress": 50,
+  review: 85,
+  done: 100,
+};
+
+export function calculateProgress(tasks: Array<{ status: string }>): number {
+  if (tasks.length === 0) return 0;
+  const totalWeight = tasks.reduce((sum, task) => sum + (STATUS_WEIGHTS[task.status] || 0), 0);
+  return Math.round(totalWeight / tasks.length);
+}

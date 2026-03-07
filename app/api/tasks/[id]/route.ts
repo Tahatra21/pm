@@ -7,7 +7,8 @@ import { NextResponse } from "next/server";
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        const task = db.select().from(tasks).where(eq(tasks.id, id)).get();
+        const taskResult = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+        const task = taskResult[0];
         if (!task) return NextResponse.json({ error: "Task not found" }, { status: 404 });
         return NextResponse.json(task);
     } catch (error) {
@@ -21,16 +22,23 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const { id } = await params;
         const body = await request.json();
 
-        const updateData: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+        const updateData: any = { updatedAt: new Date() };
         const allowedFields = ["title", "description", "status", "priority", "assigneeId", "dueDate", "startDate", "tags", "gitLink"];
         for (const field of allowedFields) {
             if (body[field] !== undefined) {
-                updateData[field] = field === "tags" ? JSON.stringify(body[field]) : body[field];
+                if (field === "tags") {
+                    updateData[field] = typeof body[field] === "string" ? body[field] : JSON.stringify(body[field]);
+                } else if (field === "dueDate" || field === "startDate") {
+                    updateData[field] = body[field] ? new Date(body[field]) : null;
+                } else {
+                    updateData[field] = body[field];
+                }
             }
         }
 
-        db.update(tasks).set(updateData).where(eq(tasks.id, id)).run();
-        const updated = db.select().from(tasks).where(eq(tasks.id, id)).get();
+        await db.update(tasks).set(updateData).where(eq(tasks.id, id));
+        const updatedResult = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+        const updated = updatedResult[0];
         return NextResponse.json(updated);
     } catch (error) {
         return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
@@ -41,7 +49,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        db.delete(tasks).where(eq(tasks.id, id)).run();
+        await db.delete(tasks).where(eq(tasks.id, id));
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });

@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
         let query = db.select().from(tasks);
 
-        let results = query.all();
+        let results = await query;
 
         if (projectId) results = results.filter((t) => t.projectId === projectId);
         if (assigneeId) results = results.filter((t) => t.assigneeId === assigneeId);
@@ -35,21 +35,22 @@ export async function POST(request: Request) {
         if (!projectId || !title) return NextResponse.json({ error: "projectId and title are required" }, { status: 400 });
 
         const id = randomUUID();
-        db.insert(tasks).values({
+        await db.insert(tasks).values({
             id, projectId, title,
             description: description || "",
             status: taskStatus || "todo",
             priority: priority || "medium",
             assigneeId: assigneeId || null,
-            dueDate: dueDate || null,
-            startDate: startDate || null,
+            dueDate: dueDate ? new Date(dueDate) : null,
+            startDate: startDate ? new Date(startDate) : null,
             tags: tags ? JSON.stringify(tags) : null,
             gitLink: gitLink || null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        }).run();
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
 
-        const created = db.select().from(tasks).where(eq(tasks.id, id)).get();
+        const createdResult = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+        const created = createdResult[0];
         return NextResponse.json(created, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
