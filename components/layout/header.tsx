@@ -46,7 +46,7 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
     const unread = notifications.filter((n) => n.unread).length;
 
     return (
-        <header className="flex items-center justify-between h-16 px-8 border-b bg-white flex-shrink-0">
+        <header className="flex items-center justify-between h-16 px-8 border-b border-border bg-background flex-shrink-0">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm">
                 {breadcrumb?.map((item, i) => (
@@ -67,17 +67,17 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
             <div className="flex items-center gap-3">
                 {actions}
 
-                <Button variant="outline" size="sm" className="h-9 gap-2 text-slate-600 font-semibold border-slate-200 hover:bg-slate-50">
+                <Button variant="outline" size="sm" className="h-9 gap-2 text-muted-foreground font-semibold border-border hover:bg-muted">
                     <Download size={15} />
                     <span className="hidden md:inline">Export</span>
                 </Button>
 
-                <Button size="sm" className="h-9 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 shadow-sm">
+                <Button size="sm" className="h-9 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-4 shadow-sm">
                     <PlusCircle size={15} />
                     <span className="hidden md:inline">Add new</span>
                 </Button>
 
-                <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+                <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
                 <ThemeToggle />
 
@@ -90,7 +90,7 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
                 >
                     <Search size={14} />
                     <span className="hidden sm:block">Cari...</span>
-                    <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border bg-muted px-1.5 text-[10px] font-mono text-muted-foreground ml-4">
+                    <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-mono text-muted-foreground ml-4">
                         <Command size={10} />K
                     </kbd>
                 </Button>
@@ -105,7 +105,7 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
                     >
                         <Bell size={15} />
                         {unread > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
                                 {unread}
                             </span>
                         )}
@@ -114,25 +114,25 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
                     {showNotif && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
-                            <div className="absolute right-0 top-11 w-80 bg-popover border rounded-xl shadow-xl z-50 overflow-hidden anim-scale-in">
-                                <div className="px-4 py-3 border-b">
+                            <div className="absolute right-0 top-11 w-80 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden anim-scale-in">
+                                <div className="px-4 py-3 border-b border-border">
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm font-semibold text-popover-foreground">Notifikasi</p>
-                                        <Badge variant="secondary" className="text-[10px]">{unread} baru</Badge>
+                                        <Badge variant="secondary" className="text-xs bg-secondary text-secondary-foreground">{unread} baru</Badge>
                                     </div>
                                 </div>
                                 {notifications.map((n) => (
                                     <div
                                         key={n.id}
                                         className={cn(
-                                            "px-4 py-3 border-b last:border-0 hover:bg-accent cursor-pointer transition-colors flex gap-3",
+                                            "px-4 py-3 border-b border-border last:border-0 hover:bg-muted cursor-pointer transition-colors flex gap-3",
                                             n.unread && "bg-primary/5"
                                         )}
                                     >
                                         {n.unread && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                                         <div className={cn(!n.unread && "ml-5")}>
-                                            <p className="text-[13px] text-popover-foreground leading-snug">{n.msg}</p>
-                                            <p className="text-[11px] text-muted-foreground mt-0.5">{n.time}</p>
+                                            <p className="text-sm text-popover-foreground leading-snug">{n.msg}</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5">{n.time}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -145,8 +145,7 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
                 <Link href="/settings">
                     <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all">
                         <AvatarFallback
-                            className="text-[11px] font-semibold text-white"
-                            style={{ backgroundColor: user?.color || "#6366f1" }}
+                            className="text-xs font-semibold text-primary-foreground bg-primary"
                         >
                             {user ? getInitials(user.name) : "?"}
                         </AvatarFallback>

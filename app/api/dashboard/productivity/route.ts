@@ -8,13 +8,34 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const streamId = searchParams.get("streamId");
+        const period = searchParams.get("period") || "weekly";
         const useStreamFilter = streamId && streamId !== "all";
 
         const now = new Date();
-        const start = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-        const end = endOfWeek(now, { weekStartsOn: 1 });
+        let start: Date;
+        let end = now;
+        let intervalType: 'days' | 'months' = 'days';
+
+        if (period === "monthly") {
+            start = new Date();
+            start.setDate(now.getDate() - 30);
+        } else if (period === "yearly") {
+            start = new Date();
+            start.setFullYear(now.getFullYear() - 1);
+            intervalType = 'months';
+        } else {
+            // Default weekly
+            start = startOfWeek(now, { weekStartsOn: 1 });
+            end = endOfWeek(now, { weekStartsOn: 1 });
+        }
         
-        const days = eachDayOfInterval({ start, end });
+        const days = intervalType === 'days' 
+            ? eachDayOfInterval({ start, end })
+            : Array.from({ length: 12 }, (_, i) => {
+                const d = new Date(start);
+                d.setMonth(start.getMonth() + i + 1);
+                return d;
+            });
         
         // Fetch logs with stream filtering if applicable
         let logsQuery = db.select({
@@ -36,13 +57,16 @@ export async function GET(req: Request) {
         const dailyCapacity = teamSize * 8;
         
         const chartData = days.map(day => {
-            const dayStr = format(day, "yyyy-MM-dd");
-            const dayLogs = logs.filter(l => format(new Date(l.date), "yyyy-MM-dd") === dayStr);
-            const totalHours = dayLogs.reduce((acc, curr) => acc + parseFloat(curr.hours || "0"), 0);
+            const formatStr = intervalType === 'days' ? "yyyy-MM-dd" : "yyyy-MM";
+            const dayStr = format(day, formatStr);
+            const label = intervalType === 'days' ? format(day, "EEE") : format(day, "MMM");
+            
+            const matches = logs.filter(l => format(new Date(l.date), formatStr) === dayStr);
+            const totalHours = matches.reduce((acc, curr) => acc + parseFloat(curr.hours || "0"), 0);
             const utilization = Math.round((totalHours / dailyCapacity) * 100);
             
             return {
-                day: format(day, "EEE"),
+                day: label,
                 date: dayStr,
                 hours: totalHours,
                 percentage: Math.min(utilization || 0, 100),

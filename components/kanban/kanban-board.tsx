@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 
 const COLS: { id: TaskStatus; label: string; color: string }[] = [
     { id: "todo", label: "To Do", color: "text-muted-foreground" },
-    { id: "in-progress", label: "In Progress", color: "text-blue-400" },
+    { id: "in-progress", label: "In Progress", color: "text-primary" },
     { id: "review", label: "Review", color: "text-amber-400" },
     { id: "done", label: "Done", color: "text-emerald-400" },
 ];
@@ -30,7 +30,7 @@ const COL_DOT: Record<string, string> = {
     todo: "#6b7280", "in-progress": "#3b82f6", review: "#f59e0b", done: "#10b981",
 };
 const PRIORITY_ICON: Record<string, React.ReactNode> = {
-    urgent: <ChevronUp size={12} className="text-red-500" />,
+    urgent: <ChevronUp size={12} className="text-destructive" />,
     high: <ChevronUp size={12} className="text-orange-500" />,
     medium: <Minus size={12} className="text-yellow-500" />,
     low: <ChevronDown size={12} className="text-muted-foreground" />,
@@ -93,7 +93,7 @@ function TaskCard({ task, index, onClick, users }: { task: Task; index: number; 
                         </div>
                         {assignee && (
                             <Avatar className="h-6 w-6">
-                                <AvatarFallback className="text-[9px] text-white font-semibold" style={{ backgroundColor: assignee.color }}>
+                                <AvatarFallback className="text-[9px] text-primary-foreground font-semibold" style={{ backgroundColor: assignee.color }}>
                                     {getInitials(assignee.name)}
                                 </AvatarFallback>
                             </Avatar>
@@ -332,7 +332,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                                     <div className="space-y-1.5 p-3 rounded-xl bg-muted/20 border border-muted/30">
                                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Assignee</p>
                                         <div className="flex items-center gap-2.5 text-sm font-medium">
-                                            <Avatar className="h-5 w-5"><AvatarFallback className="text-[9px] text-white font-semibold flex items-center justify-center p-0 m-0 leading-none pb-[1px]" style={{ backgroundColor: assignee.color }}>{getInitials(assignee.name)}</AvatarFallback></Avatar>
+                                            <Avatar className="h-5 w-5"><AvatarFallback className="text-[9px] text-primary-foreground font-semibold flex items-center justify-center p-0 m-0 leading-none pb-[1px]" style={{ backgroundColor: assignee.color }}>{getInitials(assignee.name)}</AvatarFallback></Avatar>
                                             <span className="truncate">{assignee.name}</span>
                                         </div>
                                     </div>

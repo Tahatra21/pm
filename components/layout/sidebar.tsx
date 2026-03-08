@@ -17,11 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const MENU_MAIN = [
-    { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/inbox", icon: Inbox, label: "Inbox", badge: 5 },
-];
-
+// Menu constants moved into component or handled dynamically
 const MENU_PROJECT = [
     { href: "/projects", icon: Briefcase, label: "Project" },
     { href: "/schedule", icon: Calendar, label: "Schedule" },
@@ -47,29 +43,56 @@ export default function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [prefsOpen, setPrefsOpen] = useState(false);
-    const [projects, setProjects] = useState<Array<{ id: string; title: string; color: string; taskCount: number; completedCount: number }>>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [streams, setStreams] = useState<Array<{ id: string; name: string; tagCount?: number }>>([]);
 
     useEffect(() => {
-        const fetchProjects = () => {
-            fetch("/api/projects")
-                .then(r => r.json())
-                .then(data => { if (Array.isArray(data)) setProjects(data); })
-                .catch(() => { });
+        const fetchStreams = () => {
+            console.log("SIDEBAR: Fetching streams...");
+            fetch("/api/admin/streams")
+                .then(r => {
+                    console.log("SIDEBAR: fetch response status", r.status);
+                    return r.json();
+                })
+                .then(data => { 
+                    console.log("SIDEBAR: streams loaded", data);
+                    if (Array.isArray(data)) setStreams(data); 
+                })
+                .catch(err => { console.error("SIDEBAR: fetch error", err); });
         };
 
-        fetchProjects();
+        const fetchInboxCount = () => {
+            fetch("/api/inbox/unread-count")
+                .then(r => r.json())
+                .then(data => { if (typeof data.count === "number") setUnreadCount(data.count); })
+                .catch(err => console.error("Inbox count error", err));
+        };
+
+        fetchStreams();
+        fetchInboxCount();
 
         // 1. Polling every 10 seconds
-        const interval = setInterval(fetchProjects, 10000);
+        const interval = setInterval(() => {
+            fetchStreams();
+            fetchInboxCount();
+        }, 10000);
 
         // 2. Custom event listener for immediate refresh
-        window.addEventListener("refresh-projects", fetchProjects);
+        window.addEventListener("refresh-streams", fetchStreams);
 
         return () => {
             clearInterval(interval);
-            window.removeEventListener("refresh-projects", fetchProjects);
+            window.removeEventListener("refresh-streams", fetchStreams);
         };
     }, []);
+
+    // Generate consistent colors for streams based on ID
+    const getStreamColor = (id: string) => {
+        const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#0ea5e9'];
+        let hash = 0;
+        for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+        return colors[Math.abs(hash) % colors.length];
+    };
 
     return (
         <aside className={cn(
@@ -80,17 +103,17 @@ export default function Sidebar() {
             <div className={cn("flex items-center h-16 px-4 transition-all", isCollapsed ? "justify-center" : "justify-between")}>
                 {!isCollapsed && (
                     <div className="flex items-center gap-2.5 overflow-hidden">
-                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm shrink-0">
-                            <Layout size={14} className="text-white" />
+                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm shrink-0">
+                            <Layout size={14} className="text-primary-foreground" />
                         </div>
                         <div className="min-w-0">
-                            <span className="text-lg font-bold text-slate-900 tracking-tight block truncate">Worktion</span>
+                            <span className="text-lg font-bold text-foreground tracking-tight block truncate">Worktion</span>
                         </div>
                     </div>
                 )}
                 {isCollapsed && (
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm shrink-0">
-                        <Layout size={14} className="text-white" />
+                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm shrink-0">
+                        <Layout size={14} className="text-primary-foreground" />
                     </div>
                 )}
 
@@ -114,26 +137,31 @@ export default function Sidebar() {
             <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1.5 px-3 custom-scrollbar">
                 {/* Main Menu Section */}
                 {!isCollapsed && (
-                    <span className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest block mt-2 mb-1">Main Menu</span>
+                    <span className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-[0.08em] block mt-2 mb-1">Main Menu</span>
                 )}
                 <div className="space-y-1">
-                    {MENU_MAIN.map(({ href, icon: Icon, label, badge }) => {
+                    {[
+                        { href: "/", icon: LayoutDashboard, label: "Dashboard" },
+                        { href: "/inbox", icon: Inbox, label: "Inbox", badge: unreadCount > 0 ? unreadCount : undefined },
+                    ].map(({ href, icon: Icon, label, badge }: any) => {
                         const active = pathname === href || (href !== "/" && pathname.startsWith(href));
                         const NavLinkComponent = (
                             <Link
                                 key={href}
                                 href={href}
                                 className={cn(
-                                    "flex items-center rounded-lg text-[13px] font-medium transition-all duration-200",
+                                    "flex items-center rounded-lg text-xs font-medium transition-all duration-200",
                                     isCollapsed ? "justify-center px-0 py-2 h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
-                                    active ? "bg-blue-50 text-blue-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                    active ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                 )}
                             >
-                                <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-blue-600" : "text-slate-400")} />
+                                <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-primary" : "text-muted-foreground/80")} />
                                 {!isCollapsed && (
                                     <>
                                         <span className="truncate flex-1">{label}</span>
-                                        {badge && <span className="ml-auto bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md min-w-[17px] text-center">{badge}</span>}
+                                        {badge && <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-md min-w-[17px] text-center">
+                                            {badge}
+                                        </span>}
                                     </>
                                 )}
                             </Link>
@@ -150,7 +178,7 @@ export default function Sidebar() {
                 {/* Project Section */}
                 <div className="pt-4">
                     {!isCollapsed && (
-                        <span className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Project</span>
+                        <span className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-[0.08em] block mb-1">Project</span>
                     )}
                     <div className="space-y-1">
                         {MENU_PROJECT.map(({ href, icon: Icon, label }) => {
@@ -160,69 +188,81 @@ export default function Sidebar() {
                                     key={href}
                                     href={href}
                                     className={cn(
-                                        "flex items-center rounded-lg text-[13px] font-medium transition-all duration-200",
+                                        "flex items-center rounded-lg text-xs font-medium transition-all duration-200",
                                         isCollapsed ? "justify-center px-0 py-2 h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
-                                        active ? "bg-blue-50 text-blue-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        active ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                     )}
                                 >
-                                    <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-blue-600" : "text-slate-400")} />
+                                    <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-primary" : "text-muted-foreground/80")} />
                                     {!isCollapsed && <span className="truncate flex-1">{label}</span>}
                                 </Link>
                             );
-                            return isCollapsed ? (
-                                <Tooltip key={href} delayDuration={0}>
-                                    <TooltipTrigger asChild>{NavLinkComponent}</TooltipTrigger>
-                                    <TooltipContent side="right" className="font-medium">{label}</TooltipContent>
-                                </Tooltip>
-                            ) : NavLinkComponent;
+                            
+                            return (
+                                <div key={href} className="flex flex-col space-y-1">
+                                    {isCollapsed ? (
+                                        <Tooltip delayDuration={0}>
+                                            <TooltipTrigger asChild>{NavLinkComponent}</TooltipTrigger>
+                                            <TooltipContent side="right" className="font-medium">{label}</TooltipContent>
+                                        </Tooltip>
+                                    ) : NavLinkComponent}
+                                    
+                                    {/* Sub-menu rendering only for Project */}
+                                    {label === "Project" && (
+                                        <>
+                                            {!isCollapsed && (
+                                                <div className="pt-1.5 pb-1 space-y-1 ml-[20px] border-l border-border pl-3 mt-1 mb-1">
+                                                    {streams.map((stream) => (
+                                                        <Link 
+                                                            key={stream.id} 
+                                                            href={`/stream/${stream.id}`}
+                                                            className={cn(
+                                                                "flex items-center gap-3 px-2 py-1.5 hover:bg-muted/50 rounded-lg group transition-colors",
+                                                                pathname.startsWith(`/stream/${stream.id}`) && "bg-muted/50 shadow-sm"
+                                                            )}
+                                                        >
+                                                            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getStreamColor(stream.id) }} />
+                                                            <span className={cn(
+                                                                "text-xs font-medium group-hover:text-foreground flex-1 truncate",
+                                                                pathname.startsWith(`/stream/${stream.id}`) ? "text-foreground font-bold" : "text-muted-foreground"
+                                                            )}>
+                                                                {stream.name}
+                                                            </span>
+                                                            {stream.tagCount !== undefined && (
+                                                                <span className="text-xs font-bold text-muted-foreground/60 group-hover:text-muted-foreground">
+                                                                    {stream.tagCount}
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {isCollapsed && (
+                                                <div className="pt-2 pb-2 space-y-3 flex flex-col items-center border-b border-border/50 mb-1">
+                                                    {streams.map((stream) => (
+                                                        <Tooltip key={stream.id} delayDuration={0}>
+                                                            <TooltipTrigger asChild>
+                                                                <Link href={`/stream/${stream.id}`}>
+                                                                    <div className="w-2.5 h-2.5 rounded-full ring-2 ring-background shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: getStreamColor(stream.id) }} />
+                                                                </Link>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="right" className="font-medium">{stream.name}</TooltipContent>
+                                                        </Tooltip>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            );
                         })}
-                        
-                        {!isCollapsed && (
-                            <div className="pt-2 space-y-1 ml-3 border-l border-slate-100 pl-2">
-                                {projects.map((proj) => (
-                                    <Link 
-                                        key={proj.id} 
-                                        href={`/board/${proj.id}`}
-                                        className={cn(
-                                            "flex items-center gap-3 px-2 py-1.5 hover:bg-slate-50 rounded-lg group transition-colors",
-                                            pathname.startsWith(`/board/${proj.id}`) && "bg-slate-50 shadow-sm"
-                                        )}
-                                    >
-                                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: proj.color }} />
-                                        <span className={cn(
-                                            "text-[12px] font-medium group-hover:text-slate-900 flex-1 truncate",
-                                            pathname.startsWith(`/board/${proj.id}`) ? "text-slate-900 font-bold" : "text-slate-500"
-                                        )}>
-                                            {proj.title}
-                                        </span>
-                                        <span className="text-[9px] font-bold text-slate-300 group-hover:text-slate-400">
-                                            {proj.taskCount}
-                                        </span>
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                        {isCollapsed && (
-                            <div className="pt-2 space-y-2 flex flex-col items-center">
-                                {projects.map((proj) => (
-                                    <Tooltip key={proj.id} delayDuration={0}>
-                                        <TooltipTrigger asChild>
-                                            <Link href={`/board/${proj.id}`}>
-                                                <div className="w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: proj.color }} />
-                                            </Link>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="right" className="font-medium">{proj.title}</TooltipContent>
-                                    </Tooltip>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 </div>
 
                 {/* Others Section */}
                 <div className="pt-4">
                     {!isCollapsed && (
-                        <span className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Others</span>
+                        <span className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-[0.08em] block mb-1">Others</span>
                     )}
                     <div className="space-y-1">
                         {MENU_OTHERS.map(({ href, icon: Icon, label }) => {
@@ -232,12 +272,12 @@ export default function Sidebar() {
                                     key={href}
                                     href={href}
                                     className={cn(
-                                        "flex items-center rounded-lg text-[13px] font-medium transition-all duration-200",
+                                        "flex items-center rounded-lg text-xs font-medium transition-all duration-200",
                                         isCollapsed ? "justify-center px-0 py-2 h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
-                                        active ? "bg-blue-50 text-blue-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        active ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                     )}
                                 >
-                                    <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-blue-600" : "text-slate-400")} />
+                                    <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-primary" : "text-muted-foreground/80")} />
                                     {!isCollapsed && <span className="truncate flex-1">{label}</span>}
                                 </Link>
                             );
@@ -255,7 +295,7 @@ export default function Sidebar() {
                 {user?.role === "admin" && (
                     <div className="pt-4">
                         {!isCollapsed && (
-                            <span className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Admin</span>
+                            <span className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-[0.08em] block mb-1">Admin</span>
                         )}
                         <div className="space-y-1">
                             {MENU_ADMIN.map(({ href, icon: Icon, label }) => {
@@ -265,12 +305,12 @@ export default function Sidebar() {
                                         key={href}
                                         href={href}
                                         className={cn(
-                                            "flex items-center rounded-lg text-[13px] font-medium transition-all duration-200",
+                                            "flex items-center rounded-lg text-xs font-medium transition-all duration-200",
                                             isCollapsed ? "justify-center px-0 py-2 h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
-                                            active ? "bg-blue-50 text-blue-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                            active ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                         )}
                                     >
-                                        <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-blue-600" : "text-slate-400")} />
+                                        <Icon size={isCollapsed ? 18 : 16} className={cn("shrink-0", active ? "text-primary" : "text-muted-foreground/80")} />
                                         {!isCollapsed && <span className="truncate flex-1">{label}</span>}
                                     </Link>
                                 );
@@ -286,7 +326,7 @@ export default function Sidebar() {
                 )}
             </nav>
 
-            <Separator className="bg-muted" />
+            <Separator className="bg-border" />
 
             {/* User Dropdown */}
             <div className={cn("p-3", isCollapsed && "flex justify-center")}>
@@ -298,7 +338,7 @@ export default function Sidebar() {
                         )}>
                             <Avatar className={cn("shrink-0 shadow-sm", isCollapsed ? "h-9 w-9" : "h-9 w-9")}>
                                 <AvatarFallback
-                                    className="text-xs font-bold text-white bg-slate-800"
+                                    className="text-xs font-bold text-primary-foreground bg-primary"
                                 >
                                     {user ? getInitials(user.name) : "?"}
                                 </AvatarFallback>
@@ -308,7 +348,7 @@ export default function Sidebar() {
                                     <p className="text-sm font-semibold text-foreground truncate leading-tight">
                                         {user?.name || "Loading..."}
                                     </p>
-                                    <p className="text-[11px] text-muted-foreground font-medium truncate capitalize mt-0.5">
+                                    <p className="text-xs text-muted-foreground font-normal truncate capitalize mt-0.5">
                                         {user?.role || ""}
                                     </p>
                                 </div>
@@ -321,8 +361,8 @@ export default function Sidebar() {
                         <DropdownMenuItem className="cursor-pointer rounded-lg font-medium text-foreground focus:bg-muted focus:text-foreground" onClick={() => setPrefsOpen(true)}>
                             <User className="mr-2.5 h-4 w-4 text-muted-foreground" /> Preferences
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer rounded-lg font-medium text-red-600 focus:bg-red-50 focus:text-red-700" onClick={() => setLogoutOpen(true)}>
-                            <LogOut className="mr-2.5 h-4 w-4 text-red-500" /> Logout
+                        <DropdownMenuItem className="cursor-pointer rounded-lg font-medium text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => setLogoutOpen(true)}>
+                            <LogOut className="mr-2.5 h-4 w-4 text-destructive" /> Logout
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -332,8 +372,8 @@ export default function Sidebar() {
             <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
                 <DialogContent className="sm:max-w-[400px] rounded-2xl p-0 overflow-hidden border-0 shadow-xl">
                     <div className="p-6 pt-8 pb-6 flex flex-col items-center text-center space-y-4">
-                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
-                            <LogOut className="h-6 w-6 text-red-600" />
+                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+                            <LogOut className="h-6 w-6 text-destructive" />
                         </div>
                         <DialogTitle className="text-xl font-bold text-foreground">Konfirmasi Keluar</DialogTitle>
                         <DialogDescription className="text-muted-foreground text-[15px] leading-relaxed">
@@ -342,7 +382,7 @@ export default function Sidebar() {
                     </div>
                     <div className="bg-muted/50 p-4 border-t border-border flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                         <Button variant="outline" className="w-full sm:w-auto font-semibold bg-card border-border text-foreground hover:bg-muted" onClick={() => setLogoutOpen(false)}>Batal</Button>
-                        <Button variant="destructive" className="w-full sm:w-auto font-semibold bg-red-600 hover:bg-red-700 shadow-sm" onClick={async () => {
+                        <Button variant="destructive" className="w-full sm:w-auto font-semibold shadow-sm" onClick={async () => {
                             await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
                             setLogoutOpen(false);
                             router.push("/login");
@@ -363,10 +403,10 @@ export default function Sidebar() {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="p-6 space-y-6 bg-muted/50/50">
+                    <div className="p-6 space-y-6 bg-muted/50">
                         {/* Profile Sec */}
                         <div className="space-y-3">
-                            <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">Profil Singkat</h4>
+                            <h4 className="text-xs font-semibold text-foreground uppercase tracking-[0.08em]">Profil Singkat</h4>
                             <div className="grid gap-4">
                                 <div className="space-y-1.5">
                                     <Label className="text-foreground font-medium">Nama Lengkap</Label>
@@ -379,11 +419,11 @@ export default function Sidebar() {
                             </div>
                         </div>
 
-                        <Separator className="bg-slate-200" />
+                        <Separator className="bg-border" />
 
                         {/* Region & Formats */}
                         <div className="space-y-3">
-                            <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">Regional & Format</h4>
+                            <h4 className="text-xs font-semibold text-foreground uppercase tracking-[0.08em]">Regional & Format</h4>
                             <div className="grid gap-4">
                                 <div className="space-y-1.5">
                                     <Label className="text-foreground font-medium">Zona Waktu</Label>
@@ -403,7 +443,15 @@ export default function Sidebar() {
                     </div>
 
                     <DialogFooter className="p-4 border-t border-border bg-card">
-                        <Button className="w-full sm:w-auto font-semibold bg-primary hover:bg-emerald-700 shadow-sm" onClick={() => setPrefsOpen(false)}>Simpan Perubahan</Button>
+                        <Button 
+                            className="w-full sm:w-auto font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm" 
+                            onClick={() => {
+                                alert("Pengaturan berhasil disimpan!");
+                                setPrefsOpen(false);
+                            }}
+                        >
+                            Simpan Perubahan
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

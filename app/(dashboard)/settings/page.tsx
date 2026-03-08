@@ -50,23 +50,23 @@ export default function SettingsPage() {
         <div className="flex flex-col h-full overflow-hidden">
             <Header breadcrumb={[{ label: "Dashboard", href: "/" }, { label: "Pengaturan" }]} />
             <div className="flex-1 overflow-y-auto p-6 max-w-2xl">
-                <h1 className="text-xl font-semibold tracking-tight mb-1">Pengaturan</h1>
-                <p className="text-sm text-muted-foreground mb-6">Kelola profil, notifikasi, dan keamanan akun Anda.</p>
+                <h1 className="text-headline-small text-foreground mb-1">Pengaturan</h1>
+                <p className="text-body-medium text-muted-foreground/60 mb-6">Kelola profil, notifikasi, dan keamanan akun Anda.</p>
                 <div className="space-y-4">
                     {settingsGroups.map((group) => (
                         <Card key={group.label}>
                             <CardHeader className="flex-row items-center gap-2 pb-0">
-                                <group.icon size={15} className="text-primary" />
-                                <CardTitle className="text-sm">{group.label}</CardTitle>
+                                <group.icon size={15} className="text-primary/70" />
+                                <CardTitle className="text-title-small font-medium text-foreground">{group.label}</CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 mt-3">
                                 <div className="divide-y">
                                     {group.items.map((item) => (
-                                        <div key={item.label} className="flex items-center justify-between px-6 py-3 hover:bg-accent/50 cursor-pointer transition-colors">
-                                            <span className="text-sm">{item.label}</span>
+                                        <div key={item.label} className="flex items-center justify-between px-6 py-4 hover:bg-accent/50 cursor-pointer transition-colors border-b border-border/40 last:border-0">
+                                            <span className="text-body-medium text-foreground">{item.label}</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs text-muted-foreground">{item.value}</span>
-                                                <ChevronRight size={14} className="text-muted-foreground" />
+                                                <span className="text-body-small text-muted-foreground/60">{item.value}</span>
+                                                <ChevronRight size={14} className="text-muted-foreground/30" />
                                             </div>
                                         </div>
                                     ))}

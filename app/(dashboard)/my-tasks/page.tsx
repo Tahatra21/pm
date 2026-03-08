@@ -44,8 +44,8 @@ export default function MyTasksPage() {
 
     const stats = [
         { label: "Total", value: myTasks.length, icon: Clock, color: "text-primary" },
-        { label: "Dikerjakan", value: pending.length, icon: AlertTriangle, color: "text-amber-500" },
-        { label: "Selesai", value: done.length, icon: CheckCircle2, color: "text-emerald-500" },
+        { label: "Dikerjakan", value: pending.length, icon: AlertTriangle, color: "text-chart-4" },
+        { label: "Selesai", value: done.length, icon: CheckCircle2, color: "text-chart-5" },
     ];
 
     const handleMarkDone = async (taskId: string) => {
@@ -68,12 +68,12 @@ export default function MyTasksPage() {
                 {/* Stats */}
                 <div className="grid gap-6 md:grid-cols-3">
                     {stats.map(({ label, value, icon: Icon, color }) => (
-                        <Card key={label} className="border-0 shadow-sm rounded-2xl bg-white transition-shadow hover:shadow-md">
+                        <Card key={label} className="border-0 shadow-sm rounded-2xl bg-card transition-shadow hover:shadow-md">
                             <CardContent className="flex items-center gap-4 p-6">
-                                <div className="p-3.5 rounded-xl bg-slate-50"><Icon size={24} className={color} /></div>
+                                <div className="p-3.5 rounded-xl bg-muted"><Icon size={24} className={color} /></div>
                                 <div>
-                                    <p className="text-[13px] font-semibold text-slate-500 uppercase tracking-widest">{label}</p>
-                                    <p className={`text-3xl font-extrabold mt-1 tracking-tight mono ${color}`}>{value}</p>
+                                    <p className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">{label}</p>
+                                    <p className={`text-headline-medium font-medium mt-1 tracking-tight mono ${color}`}>{value}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -81,11 +81,11 @@ export default function MyTasksPage() {
                 </div>
 
                 {/* Tasks table */}
-                <Card className="border-0 shadow-sm rounded-2xl bg-white overflow-hidden">
+                <Card className="border-0 shadow-sm rounded-2xl bg-card overflow-hidden">
                     <CardHeader className="pb-4 pt-6 px-6 flex-row items-center justify-between">
-                        <CardTitle className="text-sm">Semua Tugas Saya</CardTitle>
+                        <CardTitle className="text-title-medium text-foreground">Semua Tugas Saya</CardTitle>
                         <Select value={filter} onValueChange={setFilter}>
-                            <SelectTrigger className="w-[140px] h-8 text-xs">
+                            <SelectTrigger className="w-[140px] h-9 text-label-medium font-medium rounded-xl border-border bg-muted/50">
                                 <SelectValue placeholder="Semua Tugas" />
                             </SelectTrigger>
                             <SelectContent>
@@ -97,12 +97,12 @@ export default function MyTasksPage() {
                     </CardHeader>
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead className="text-xs w-1"></TableHead>
-                                <TableHead className="text-xs">Tugas</TableHead>
-                                <TableHead className="text-xs">Proyek</TableHead>
-                                <TableHead className="text-xs">Status</TableHead>
-                                <TableHead className="text-xs">Tenggat</TableHead>
+                            <TableRow className="bg-muted/30 border-border">
+                                <TableHead className="w-1"></TableHead>
+                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Tugas</TableHead>
+                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Proyek</TableHead>
+                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Status</TableHead>
+                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Tenggat</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -123,32 +123,32 @@ export default function MyTasksPage() {
                                                 <div className="w-1 h-6 rounded-full" style={{ backgroundColor: PRIORITY_COLOR[task.priority] }} />
                                             </TableCell>
                                             <TableCell>
-                                                <p className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                                                <p className={`text-body-medium font-medium ${task.status === "done" ? "line-through text-muted-foreground/60 font-normal" : "text-foreground"}`}>{task.title}</p>
                                                 {task.tags && task.tags.length > 0 && (
                                                     <div className="flex gap-1 mt-1">
                                                         {(typeof task.tags === "string" ? JSON.parse(task.tags) : task.tags).slice(0, 2).map((tag: string) => (
-                                                            <Badge key={tag} variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">#{tag}</Badge>
+                                                            <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0 h-4 font-normal">#{tag}</Badge>
                                                         ))}
                                                     </div>
                                                 )}
                                             </TableCell>
                                             <TableCell>
                                                 {project && (
-                                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                                    <div className="flex items-center gap-1.5 text-body-small text-muted-foreground/60">
                                                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: project.color }} />
                                                         {project.title}
                                                     </div>
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={STATUS_MAP[task.status]?.variant || "outline"} className="text-[11px]">
+                                                <Badge variant={STATUS_MAP[task.status]?.variant || "outline"} className="text-label-small font-medium rounded-lg px-2 shadow-none border-transparent bg-muted/50 text-muted-foreground">
                                                     {STATUS_MAP[task.status]?.label}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 {task.dueDate && (
-                                                    <span className={`flex items-center gap-1 text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                                                        <Calendar size={11} /> {formatDate(task.dueDate)}
+                                                    <span className={`flex items-center gap-1 text-label-small ${overdue ? "text-destructive font-medium" : "text-muted-foreground/40"}`}>
+                                                        <Calendar size={11} className="opacity-60" /> {formatDate(task.dueDate)}
                                                     </span>
                                                 )}
                                             </TableCell>
@@ -164,36 +164,36 @@ export default function MyTasksPage() {
             {/* Task Detail Sheet */}
             <Sheet open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
                 <SheetContent className="w-[400px] sm:w-[500px]">
-                    <SheetHeader>
-                        <SheetTitle>Task Detail</SheetTitle>
-                        <SheetDescription>Detail dan status tugas ini.</SheetDescription>
+                    <SheetHeader className="p-6 border-b border-border bg-muted/30">
+                        <SheetTitle className="text-title-large text-foreground">Task Detail</SheetTitle>
+                        <SheetDescription className="text-body-medium text-muted-foreground">Detail dan status tugas ini.</SheetDescription>
                     </SheetHeader>
                     {selectedTask && (
-                        <div className="py-6 space-y-6">
+                        <div className="p-6 space-y-6">
                             <div>
-                                <h3 className="font-semibold text-lg text-slate-900">{selectedTask.title}</h3>
-                                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                                <h3 className="text-title-medium font-medium text-foreground">{selectedTask.title}</h3>
+                                <p className="text-body-medium text-muted-foreground/60 mt-2 leading-relaxed">
                                     {selectedTask.description || "Tidak ada deskripsi rinci untuk tugas ini."}
                                 </p>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <div className="grid grid-cols-2 gap-4 text-sm bg-muted p-4 rounded-xl border border-border">
                                 <div>
-                                    <span className="text-muted-foreground block mb-1.5 text-xs font-semibold uppercase tracking-widest">Status</span>
-                                    <Badge variant={STATUS_MAP[selectedTask.status]?.variant || "outline"}>
+                                    <span className="text-label-small font-medium text-muted-foreground/40 block mb-1.5 uppercase tracking-[0.05em]">Status</span>
+                                    <Badge variant={STATUS_MAP[selectedTask.status]?.variant || "outline"} className="text-label-small font-medium rounded-lg">
                                         {STATUS_MAP[selectedTask.status]?.label}
                                     </Badge>
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground block mb-1.5 text-xs font-semibold uppercase tracking-widest">Tenggat Waktu</span>
-                                    <span className="flex items-center gap-1.5 font-medium text-slate-800">
-                                        <Calendar size={13} className="text-slate-400" />
+                                    <span className="text-label-small font-medium text-muted-foreground/40 block mb-1.5 uppercase tracking-[0.05em]">Tenggat Waktu</span>
+                                    <span className="flex items-center gap-1.5 font-medium text-foreground text-label-large">
+                                        <Calendar size={13} className="text-muted-foreground/30" />
                                         {selectedTask.dueDate ? formatDate(selectedTask.dueDate) : "-"}
                                     </span>
                                 </div>
                             </div>
                             <div className="pt-4 mt-8 flex flex-col gap-3">
                                 <Button
-                                    className="w-full h-11"
+                                    className="w-full h-11 rounded-xl text-label-large font-medium shadow-md shadow-primary/10"
                                     variant={selectedTask.status === "done" ? "secondary" : "default"}
                                     disabled={selectedTask.status === "done"}
                                     onClick={() => handleMarkDone(selectedTask.id)}

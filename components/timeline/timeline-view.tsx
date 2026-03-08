@@ -182,7 +182,7 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={goForward}><ChevronRight size={14} /></Button>
                     </div>
 
-                    <div className="flex items-center bg-slate-100 rounded-xl p-1 shadow-sm border border-slate-200/50">
+                    <div className="flex items-center bg-muted/80 rounded-xl p-1 shadow-sm border border-border/50">
                         {(["day", "week", "month", "year"] as const).map((z) => (
                             <Button
                                 key={z}
@@ -190,7 +190,7 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                 size="sm"
                                 className={cn(
                                     "h-8 px-4 text-[11px] font-bold transition-all rounded-lg",
-                                    zoom === z ? "bg-white shadow-sm text-primary" : "text-slate-500 hover:text-slate-900"
+                                    zoom === z ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
                                 )}
                                 onClick={() => {
                                     setZoom(z);
@@ -207,18 +207,18 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                 </div>
 
                 {/* Timeline */}
-                <div className="flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="flex-1 overflow-auto rounded-2xl border border-border bg-card shadow-sm">
                     <div style={{ minWidth: `${240 + totalWidth}px` }}>
                         {/* Multi-level Headers */}
                         {headerLevels.map((level, lIndex) => level.length > 0 && (
-                            <div key={lIndex} className={cn("flex border-b border-slate-100 sticky z-20", lIndex === 0 ? "bg-slate-50/80 top-0" : "bg-white", lIndex === 1 ? "top-[33px]" : lIndex === 2 ? "top-[66px]" : "")} style={{ paddingLeft: "240px" }}>
+                            <div key={lIndex} className={cn("flex border-b border-border sticky z-20", lIndex === 0 ? "bg-muted/80 top-0" : "bg-card", lIndex === 1 ? "top-[33px]" : lIndex === 2 ? "top-[66px]" : "")} style={{ paddingLeft: "240px" }}>
                                 {level.map((item, i) => (
-                                    <div key={i} className="border-r border-slate-100/50 py-2 px-1 flex-shrink-0 text-center flex flex-col justify-center overflow-hidden" style={{ width: `${item.width}px` }}>
+                                    <div key={i} className="border-r border-border/50 py-2 px-1 flex-shrink-0 text-center flex flex-col justify-center overflow-hidden" style={{ width: `${item.width}px` }}>
                                         <span className={cn(
                                             "truncate px-1",
-                                            lIndex === 0 ? "text-[10px] font-bold text-slate-400 uppercase tracking-widest" : 
-                                            lIndex === 1 ? "text-[9px] font-bold text-slate-500 uppercase" : 
-                                            "text-[10px] font-extrabold text-slate-700"
+                                            lIndex === 0 ? "text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest" : 
+                                            lIndex === 1 ? "text-[9px] font-bold text-muted-foreground uppercase" : 
+                                            "text-[10px] font-extrabold text-foreground/90"
                                         )}>
                                             {item.label}
                                         </span>
@@ -235,22 +235,22 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                 const progress = STATUS_WEIGHTS[task.status] || 0;
 
                                 return (
-                                    <div key={task.id} className="flex items-center group hover:bg-slate-50/50 transition-colors" style={{ height: "52px" }}>
-                                        <div className="flex items-center gap-3 px-6 flex-shrink-0 h-full border-r border-slate-100 sticky left-0 z-10 bg-white group-hover:bg-slate-50/50 transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]" style={{ width: "240px" }}>
+                                    <div key={task.id} className="flex items-center group hover:bg-muted/50 transition-colors" style={{ height: "52px" }}>
+                                        <div className="flex items-center gap-3 px-6 flex-shrink-0 h-full border-r border-border sticky left-0 z-10 bg-card group-hover:bg-muted/50 transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]" style={{ width: "240px" }}>
                                             {assignee ? (
                                                 <Avatar className="h-6 w-6 ring-2 ring-white shadow-sm flex-shrink-0">
-                                                    <AvatarFallback className="text-[9px] text-white font-black" style={{ backgroundColor: assignee.color }}>
+                                                    <AvatarFallback className="text-[9px] text-primary-foreground font-black" style={{ backgroundColor: assignee.color }}>
                                                         {getInitials(assignee.name)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                             ) : (
-                                                <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-[10px] text-slate-400 font-bold">?</span>
+                                                <div className="w-6 h-6 rounded-lg bg-muted/80 flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-[10px] text-muted-foreground/80 font-bold">?</span>
                                                 </div>
                                             )}
                                             <div className="flex flex-col overflow-hidden">
-                                                <span className="text-[12px] font-semibold text-slate-700 truncate" title={task.title}>{task.title}</span>
-                                                <span className="text-[10px] text-slate-400 font-medium capitalize">{STATUS_LABELS[task.status]}</span>
+                                                <span className="text-[12px] font-semibold text-foreground/90 truncate" title={task.title}>{task.title}</span>
+                                                <span className="text-[10px] text-muted-foreground/80 font-medium capitalize">{STATUS_LABELS[task.status]}</span>
                                             </div>
                                         </div>
                                         <div className="relative h-full" style={{ width: `${totalWidth}px`, flexShrink: 0 }}>
@@ -272,36 +272,36 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                                         >
                                                             {/* Progress highlight */}
                                                             <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10">
-                                                                <div className="h-full bg-white/40" style={{ width: `${progress}%` }} />
+                                                                <div className="h-full bg-card/40" style={{ width: `${progress}%` }} />
                                                             </div>
-                                                            <span className="text-white text-[11px] font-bold truncate drop-shadow-sm pointer-events-none relative z-10">
+                                                            <span className="text-primary-foreground text-[11px] font-bold truncate drop-shadow-sm pointer-events-none relative z-10">
                                                                 {bar.width > 120 ? task.title : ""}
                                                             </span>
                                                         </div>
                                                     </TooltipTrigger>
-                                                    <TooltipContent side="top" sideOffset={8} className="p-3 bg-white border border-slate-200 shadow-xl rounded-xl text-slate-900 min-w-[200px] z-50">
+                                                    <TooltipContent side="top" sideOffset={8} className="p-3 bg-card border border-border shadow-xl rounded-xl text-foreground min-w-[200px] z-50">
                                                         <div className="flex flex-col gap-2.5">
                                                             <div className="flex items-center justify-between gap-4">
-                                                                <span className="text-[13px] font-bold text-slate-800 leading-tight">{task.title}</span>
-                                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-white shadow-sm" style={{ backgroundColor: bar.color }}>
+                                                                <span className="text-[13px] font-bold text-foreground leading-tight">{task.title}</span>
+                                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-primary-foreground shadow-sm" style={{ backgroundColor: bar.color }}>
                                                                     {STATUS_LABELS[task.status]}
                                                                 </span>
                                                             </div>
-                                                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                                            <div className="h-1.5 w-full bg-muted/80 rounded-full overflow-hidden shadow-inner">
                                                                 <div className="h-full rounded-full shadow-sm" style={{ width: `${progress}%`, backgroundColor: bar.color }} />
                                                             </div>
-                                                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                            <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                                                                 <span>Progress</span>
-                                                                <span className="text-slate-800">{progress}%</span>
+                                                                <span className="text-foreground">{progress}%</span>
                                                             </div>
-                                                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                                            <div className="pt-2 border-t border-border flex items-center justify-between">
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-[8px] text-slate-400 uppercase font-bold">Mulai</span>
-                                                                    <span className="text-[10px] font-bold text-slate-700">{task.startDate ? formatDateShort(task.startDate) : "-"}</span>
+                                                                    <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Mulai</span>
+                                                                    <span className="text-[10px] font-bold text-foreground/90">{task.startDate ? formatDateShort(task.startDate) : "-"}</span>
                                                                 </div>
                                                                 <div className="flex flex-col items-end">
-                                                                    <span className="text-[8px] text-slate-400 uppercase font-bold">Tenggat</span>
-                                                                    <span className="text-[10px] font-bold text-slate-700">{task.dueDate ? formatDateShort(task.dueDate) : "-"}</span>
+                                                                    <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Tenggat</span>
+                                                                    <span className="text-[10px] font-bold text-foreground/90">{task.dueDate ? formatDateShort(task.dueDate) : "-"}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -313,10 +313,10 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                 );
                             })}
                             {timelineTasks.length === 0 && (
-                                <div className="py-20 text-center flex flex-col items-center justify-center bg-slate-50/30">
+                                <div className="py-20 text-center flex flex-col items-center justify-center bg-muted/30">
                                     <CalendarIcon className="text-slate-200 mb-3" size={40} />
-                                    <p className="text-sm font-bold text-slate-400">Tidak ada jadwal aktif</p>
-                                    <p className="text-xs text-slate-300 mt-1">Tambahkan tanggal mulai/tenggat pada tugas.</p>
+                                    <p className="text-sm font-bold text-muted-foreground/80">Tidak ada jadwal aktif</p>
+                                    <p className="text-xs text-muted-foreground/60 mt-1">Tambahkan tanggal mulai/tenggat pada tugas.</p>
                                 </div>
                             )}
                         </div>
@@ -329,13 +329,13 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                         {Object.entries(STATUS_LABELS).map(([key, label]) => (
                             <div key={key} className="flex items-center gap-2">
                                 <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: STATUS_COLORS[key] }} />
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{label}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">{label}</span>
                             </div>
                         ))}
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 rounded-lg border border-slate-200/50">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/80/50 rounded-lg border border-border/50">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest leading-none">Sinkronisasi Aktif</span>
+                        <span className="text-[9px] font-bold text-foreground/80 uppercase tracking-widest leading-none">Sinkronisasi Aktif</span>
                     </div>
                 </div>
             </div>

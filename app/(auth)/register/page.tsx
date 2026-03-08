@@ -106,7 +106,7 @@ export default function RegisterPage() {
                         </div>
                     )}
                     {success && (
-                        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-600">
+                        <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary">
                             Registrasi berhasil! Mengalihkan ke halaman login...
                         </div>
                     )}

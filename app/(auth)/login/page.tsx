@@ -104,7 +104,7 @@ export default function LoginPage() {
                     {/* SSO */}
                     <Button variant="outline" className="w-full justify-center gap-2.5 h-10 mb-5" type="button">
                         <div className="w-5 h-5 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-[9px] font-bold">ID</span>
+                            <span className="text-primary-foreground text-[9px] font-bold">ID</span>
                         </div>
                         Masuk dengan SSO Perusahaan
                     </Button>

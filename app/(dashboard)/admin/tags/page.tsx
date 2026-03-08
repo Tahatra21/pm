@@ -81,49 +81,49 @@ export default function MasterTagPage() {
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-slate-50/50">
+        <div className="flex flex-col h-full overflow-hidden bg-muted/50">
             <Header breadcrumb={[{ label: "Admin" }, { label: "Master Tag" }]} />
             
             <div className="flex-1 overflow-y-auto px-8 py-8">
                 <div className="max-w-6xl mx-auto space-y-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Master Tag</h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Manage project classification tags</p>
+                            <h1 className="text-2xl font-black text-foreground tracking-tight">Master Tag</h1>
+                            <p className="text-sm font-medium text-muted-foreground mt-1">Manage project classification tags</p>
                         </div>
-                        <Button onClick={() => { setEditor({ code: "", name: "", category: "general", sortOrder: "0" }); setShowModal(true); }} className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-100 rounded-xl px-5">
+                        <Button onClick={() => { setEditor({ code: "", name: "", category: "general", sortOrder: "0" }); setShowModal(true); }} className="gap-2 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 text-white rounded-xl px-5">
                             <Plus size={16} strokeWidth={3} />
                             <span className="font-bold">Add Tag</span>
                         </Button>
                     </div>
 
-                    <Card className="rounded-[24px] border-slate-200/60 shadow-sm overflow-hidden bg-white">
+                    <Card className="rounded-[24px] border-border/60 shadow-sm overflow-hidden bg-card">
                         <Table>
-                            <TableHeader className="bg-slate-50/50">
-                                <TableRow className="hover:bg-transparent border-slate-100">
-                                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 h-12">Code</TableHead>
-                                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 h-12">Name</TableHead>
-                                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 h-12">Category</TableHead>
-                                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 h-12">Status</TableHead>
-                                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 h-12 text-right">Actions</TableHead>
+                            <TableHeader className="bg-muted/50">
+                                <TableRow className="hover:bg-transparent border-border">
+                                    <TableHead className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest px-6 h-12">Code</TableHead>
+                                    <TableHead className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest px-6 h-12">Name</TableHead>
+                                    <TableHead className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest px-6 h-12">Category</TableHead>
+                                    <TableHead className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest px-6 h-12">Status</TableHead>
+                                    <TableHead className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest px-6 h-12 text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tags.map((t) => (
-                                    <TableRow key={t.id} className="group border-slate-50 hover:bg-emerald-50/10 transition-colors">
-                                        <TableCell className="px-6 py-4 font-bold text-slate-900 text-sm mono tracking-tight">{t.code}</TableCell>
+                                    <TableRow key={t.id} className="group border-border hover:bg-muted/50 transition-colors">
+                                        <TableCell className="px-6 py-4 font-bold text-foreground text-sm mono tracking-tight">{t.code}</TableCell>
                                         <TableCell className="px-6 py-4">
-                                            <span className="font-bold text-slate-900 text-sm">{t.name}</span>
+                                            <span className="font-bold text-foreground text-sm">{t.name}</span>
                                         </TableCell>
                                         <TableCell className="px-6 py-4">
-                                            <Badge variant="outline" className="rounded-lg bg-slate-50 text-slate-500 border-slate-200 text-[10px] font-bold uppercase tracking-wider">
+                                            <Badge variant="outline" className="rounded-lg bg-muted text-muted-foreground border-border text-[10px] font-bold uppercase tracking-wider">
                                                 {t.category || "General"}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="px-6 py-4">
                                             <Badge variant="outline" onClick={() => toggleActive(t)} className={cn(
                                                 "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all",
-                                                t.isActive === "true" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-100 text-slate-400 border-slate-200"
+                                                t.isActive === "true" ? "bg-primary/20 text-primary border-primary/30" : "bg-muted/80 text-muted-foreground/80 border-border"
                                             )}>
                                                 {t.isActive === "true" ? "Active" : "Inactive"}
                                             </Badge>
@@ -131,18 +131,18 @@ export default function MasterTagPage() {
                                         <TableCell className="px-6 py-4 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/80 hover:text-foreground hover:bg-muted/80 rounded-lg">
                                                         <MoreHorizontal size={14} />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="rounded-xl border-slate-200 shadow-xl p-1.5 w-40">
-                                                    <DropdownMenuItem onClick={() => { setEditor(t); setShowModal(true); }} className="rounded-lg gap-2 text-sm font-bold text-slate-600 focus:bg-slate-50">
+                                                <DropdownMenuContent align="end" className="rounded-xl border-border shadow-xl p-1.5 w-40">
+                                                    <DropdownMenuItem onClick={() => { setEditor(t); setShowModal(true); }} className="rounded-lg gap-2 text-sm font-bold text-foreground/80 focus:bg-muted">
                                                         <Pencil size={14} /> Edit
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => toggleActive(t)} className="rounded-lg gap-2 text-sm font-bold text-slate-600 focus:bg-slate-50">
+                                                    <DropdownMenuItem onClick={() => toggleActive(t)} className="rounded-lg gap-2 text-sm font-bold text-foreground/80 focus:bg-muted">
                                                         <Info size={14} /> Toggle Status
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleDelete(t.id)} className="rounded-lg gap-2 text-sm font-bold text-red-600 focus:bg-red-50">
+                                                    <DropdownMenuItem onClick={() => handleDelete(t.id)} className="rounded-lg gap-2 text-sm font-bold text-destructive focus:bg-destructive/10">
                                                         <Trash2 size={14} /> Delete
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -157,62 +157,62 @@ export default function MasterTagPage() {
             </div>
 
             <Dialog open={showModal} onOpenChange={setShowModal}>
-                <DialogContent className="sm:max-w-md rounded-[32px] border-slate-200 shadow-2xl p-0 overflow-hidden">
+                <DialogContent className="sm:max-w-md rounded-[32px] border-border shadow-2xl p-0 overflow-hidden">
                     <form onSubmit={handleSave}>
-                        <DialogHeader className="p-8 pb-4 bg-slate-50/50">
-                            <DialogTitle className="text-xl font-black text-slate-900 tracking-tight">
-                                <Zap className="inline-block mr-2 text-emerald-500 fill-emerald-500" size={20} />
+                        <DialogHeader className="p-8 pb-4 bg-muted/50">
+                            <DialogTitle className="text-xl font-black text-foreground tracking-tight">
+                                <Zap className="inline-block mr-2 text-chart-5 fill-emerald-500" size={20} />
                                 {editor?.id ? "Edit Tag" : "New Tag"}
                             </DialogTitle>
-                            <DialogDescription className="text-sm font-medium text-slate-500">Configure master project tags.</DialogDescription>
+                            <DialogDescription className="text-sm font-medium text-muted-foreground">Configure master project tags.</DialogDescription>
                         </DialogHeader>
                         <div className="p-8 space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Tag Code *</Label>
+                                    <Label className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest pl-1">Tag Code *</Label>
                                     <Input 
                                         value={editor?.code || ""} 
                                         onChange={e => setEditor({...editor, code: e.target.value.toUpperCase().replace(/\s/g, "_")})} 
                                         placeholder="SA_PLN_1" 
-                                        className="rounded-xl border-slate-200 bg-slate-50/50 font-bold focus:ring-emerald-500 text-sm mono h-11"
+                                        className="rounded-xl border-border bg-muted/50 font-bold focus:ring-emerald-500 text-sm mono h-11"
                                         required 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Tag Name *</Label>
+                                    <Label className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest pl-1">Tag Name *</Label>
                                     <Input 
                                         value={editor?.name || ""} 
                                         onChange={e => setEditor({...editor, name: e.target.value})} 
                                         placeholder="SA PLN 1" 
-                                        className="rounded-xl border-slate-200 bg-slate-50/50 font-bold focus:ring-emerald-500 text-sm h-11"
+                                        className="rounded-xl border-border bg-muted/50 font-bold focus:ring-emerald-500 text-sm h-11"
                                         required 
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Category</Label>
+                                <Label className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest pl-1">Category</Label>
                                 <Input 
                                     value={editor?.category || ""} 
                                     onChange={e => setEditor({...editor, category: e.target.value})} 
                                     placeholder="e.g. PLN, Enterprise..." 
-                                    className="rounded-xl border-slate-200 bg-slate-50/50 font-bold focus:ring-emerald-500 text-sm h-11"
+                                    className="rounded-xl border-border bg-muted/50 font-bold focus:ring-emerald-500 text-sm h-11"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Sort Order</Label>
+                                <Label className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest pl-1">Sort Order</Label>
                                 <Input 
                                     type="number"
                                     value={editor?.sortOrder || "0"} 
                                     onChange={e => setEditor({...editor, sortOrder: e.target.value})} 
-                                    className="rounded-xl border-slate-200 bg-slate-50/50 font-bold focus:ring-emerald-500 text-sm h-11"
+                                    className="rounded-xl border-border bg-muted/50 font-bold focus:ring-emerald-500 text-sm h-11"
                                 />
                             </div>
                         </div>
-                        <DialogFooter className="p-8 pt-4 bg-slate-50/50 border-t border-slate-100">
+                        <DialogFooter className="p-8 pt-4 bg-muted/50 border-t border-border">
                             <DialogClose asChild>
-                                <Button type="button" variant="ghost" className="rounded-xl font-bold text-slate-500 hover:text-slate-900 border-transparent hover:bg-slate-200">Cancel</Button>
+                                <Button type="button" variant="ghost" className="rounded-xl font-bold text-muted-foreground hover:text-foreground border-transparent hover:bg-muted/60">Cancel</Button>
                             </DialogClose>
-                            <Button type="submit" className="rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold shadow-lg shadow-emerald-100 px-6">Save Changes</Button>
+                            <Button type="submit" className="rounded-xl bg-primary hover:bg-primary/90 font-bold shadow-lg shadow-primary/20 text-white px-6">Save Changes</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
