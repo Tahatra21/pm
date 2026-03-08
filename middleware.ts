@@ -15,12 +15,22 @@ export function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    // Check session cookie
-    const token = request.cookies.get("session_token")?.value;
+    // Check session cookie safely
+    let token = null;
+    try {
+        const cookie = request.cookies.get("session_token");
+        token = cookie?.value;
+    } catch (e) {
+        console.error("Middleware error reading cookie:", e);
+    }
+
     if (!token) {
         // API routes: return 401 JSON
         if (pathname.startsWith("/api/")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return new NextResponse(
+                JSON.stringify({ error: "Unauthorized" }),
+                { status: 401, headers: { 'content-type': 'application/json' } }
+            );
         }
         // Pages: redirect to login
         return NextResponse.redirect(new URL("/login", request.url));

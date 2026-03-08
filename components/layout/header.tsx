@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Bell, Plus, Command } from "lucide-react";
+import { Search, Bell, Plus, Command, Download, PlusCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn, getInitials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
     const unread = notifications.filter((n) => n.unread).length;
 
     return (
-        <header className="flex items-center justify-between h-14 px-6 border-b bg-card flex-shrink-0">
+        <header className="flex items-center justify-between h-16 px-8 border-b bg-white flex-shrink-0">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm">
                 {breadcrumb?.map((item, i) => (
@@ -64,8 +64,20 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
             </div>
 
             {/* Actions right */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
                 {actions}
+
+                <Button variant="outline" size="sm" className="h-9 gap-2 text-slate-600 font-semibold border-slate-200 hover:bg-slate-50">
+                    <Download size={15} />
+                    <span className="hidden md:inline">Export</span>
+                </Button>
+
+                <Button size="sm" className="h-9 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 shadow-sm">
+                    <PlusCircle size={15} />
+                    <span className="hidden md:inline">Add new</span>
+                </Button>
+
+                <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
                 <ThemeToggle />
 

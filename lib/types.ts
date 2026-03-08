@@ -15,6 +15,8 @@ export interface Project {
   title: string;
   description: string;
   color: string;
+  streamId?: string;
+  tags?: string[];
   members: string[]; // user ids
   taskCount: number;
   completedCount: number;
