@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { Task, TaskStatus } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
 import { formatDate, getInitials, isOverdue } from "@/lib/utils";
-import { Plus, X, Calendar, Link2, ChevronUp, ChevronDown, Minus, Circle } from "lucide-react";
+import { Plus, X, Calendar, Link2, ChevronUp, ChevronDown, Minus, Circle, MessageSquare, CheckSquare, Paperclip } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,8 +54,8 @@ function TaskCard({ task, index, onClick, users }: { task: Task; index: number; 
                     onClick={() => onClick(task)}
                     className={`
             bg-card border rounded-lg p-3.5 mb-2 cursor-pointer
-            hover:shadow-md hover:border-primary/20 transition-all duration-150
-            ${snapshot.isDragging ? "shadow-xl rotate-1 scale-[1.02] border-primary/30" : "shadow-xs"}
+            hover:shadow-md hover:border-primary/20 transition-all duration-150 ease-out
+            ${snapshot.isDragging ? "shadow-xl rotate-1 scale-[1.02] border-primary/30 ring-1 ring-primary/20" : "shadow-xs"}
           `}
                 >
                     {/* Tags */}
@@ -73,15 +73,23 @@ function TaskCard({ task, index, onClick, users }: { task: Task; index: number; 
                     <p className="text-[13px] leading-snug mb-3 font-medium">{task.title}</p>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/40">
+                        <div className="flex items-center gap-3">
                             <span title={PRIORITY_LABEL[task.priority]}>{PRIORITY_ICON[task.priority]}</span>
                             {task.dueDate && (
-                                <span className={`flex items-center gap-1 text-[11px] ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
-                                    <Calendar size={10} /> {formatDate(task.dueDate)}
+                                <span className={`flex items-center gap-1 text-[11px] font-medium ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                                    <Calendar size={11} /> {formatDate(task.dueDate)}
                                 </span>
                             )}
-                            {task.gitLink && <Link2 size={11} className="text-muted-foreground" />}
+                            
+                            {/* Data Density Indicators */}
+                            <div className="flex items-center gap-2.5 text-muted-foreground">
+                                <span className="flex items-center gap-0.5 text-[10px] font-mono"><CheckSquare size={10} /> 0/0</span>
+                                <span className="flex items-center gap-0.5 text-[10px] font-mono"><MessageSquare size={10} /> 0</span>
+                                {task.gitLink && <span className="flex items-center gap-0.5 text-[10px] font-mono text-primary"><Link2 size={10} /></span>}
+                                {/* Placeholder for Attachments if any */}
+                                {/* <span className="flex items-center gap-0.5 text-[10px] font-mono"><Paperclip size={10} /> 0</span> */}
+                            </div>
                         </div>
                         {assignee && (
                             <Avatar className="h-6 w-6">

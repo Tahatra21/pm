@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface HeaderProps {
     breadcrumb?: { label: string; href?: string }[];
@@ -66,6 +67,8 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
             <div className="flex items-center gap-2">
                 {actions}
 
+                <ThemeToggle />
+
                 {/* Search */}
                 <Button
                     variant="outline"
@@ -79,41 +82,6 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
                         <Command size={10} />K
                     </kbd>
                 </Button>
-
-                {/* New task */}
-                <Dialog open={taskOpen} onOpenChange={setTaskOpen}>
-                    <DialogTrigger asChild>
-                        <Button size="sm" className="gap-1.5 h-9 shadow-sm">
-                            <Plus size={14} /> Tugas Baru
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Tugas Baru / Create Task</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleCreateTask} className="space-y-4 py-4">
-                            {taskError && (
-                                <div className="p-2 text-sm text-destructive bg-destructive/10 rounded-md">
-                                    {taskError}
-                                </div>
-                            )}
-                            <div className="space-y-2">
-                                <Label htmlFor="title">Title / Judul Tugas <span className="text-destructive">*</span></Label>
-                                <Input
-                                    id="title"
-                                    placeholder="Apa yang perlu diselesaikan?"
-                                    value={taskTitle}
-                                    onChange={(e) => setTaskTitle(e.target.value)}
-                                    autoFocus
-                                />
-                            </div>
-                            <DialogFooter>
-                                <Button type="button" variant="outline" onClick={() => setTaskOpen(false)}>Cancel</Button>
-                                <Button type="submit">Create</Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
 
                 {/* Notifications */}
                 <div className="relative">
@@ -162,14 +130,16 @@ export default function Header({ breadcrumb, actions }: HeaderProps) {
                 </div>
 
                 {/* Avatar */}
-                <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all">
-                    <AvatarFallback
-                        className="text-[11px] font-semibold text-white"
-                        style={{ backgroundColor: user?.color || "#6366f1" }}
-                    >
-                        {user ? getInitials(user.name) : "?"}
-                    </AvatarFallback>
-                </Avatar>
+                <Link href="/settings">
+                    <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all">
+                        <AvatarFallback
+                            className="text-[11px] font-semibold text-white"
+                            style={{ backgroundColor: user?.color || "#6366f1" }}
+                        >
+                            {user ? getInitials(user.name) : "?"}
+                        </AvatarFallback>
+                    </Avatar>
+                </Link>
             </div>
         </header>
     );
