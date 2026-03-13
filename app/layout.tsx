@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ProjectFlow — Team Project Management",
+  title: ".Worktion",
   description: "Internal project management platform for collaborative teams",
 };
 

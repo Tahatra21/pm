@@ -32,15 +32,15 @@ async function sendEmail(payload: NotificationPayload): Promise<boolean> {
 export async function notifyNewTask(assigneeEmail: string, taskTitle: string, projectTitle: string): Promise<boolean> {
     return sendEmail({
         to: assigneeEmail,
-        subject: `[ProjectFlow] Tugas baru: ${taskTitle}`,
-        body: `Anda ditugaskan pada: "${taskTitle}" di proyek "${projectTitle}". Buka ProjectFlow untuk detail lebih lanjut.`,
+        subject: `[.Worktion] Tugas baru: ${taskTitle}`,
+        body: `Anda ditugaskan pada: "${taskTitle}" di proyek "${projectTitle}". Buka .Worktion untuk detail lebih lanjut.`,
     });
 }
 
 export async function notifyDueDate(assigneeEmail: string, taskTitle: string, dueDate: string): Promise<boolean> {
     return sendEmail({
         to: assigneeEmail,
-        subject: `[ProjectFlow] Tenggat dalam 24 jam: ${taskTitle}`,
+        subject: `[.Worktion] Tenggat dalam 24 jam: ${taskTitle}`,
         body: `Tugas "${taskTitle}" memiliki tenggat pada ${dueDate}. Pastikan tugas ini telah diselesaikan atau diperbarui statusnya.`,
     });
 }
@@ -48,7 +48,7 @@ export async function notifyDueDate(assigneeEmail: string, taskTitle: string, du
 export async function notifyStatusUpdate(recipientEmail: string, taskTitle: string, oldStatus: string, newStatus: string): Promise<boolean> {
     return sendEmail({
         to: recipientEmail,
-        subject: `[ProjectFlow] Status berubah: ${taskTitle}`,
+        subject: `[.Worktion] Status berubah: ${taskTitle}`,
         body: `Status tugas "${taskTitle}" diperbarui dari "${oldStatus}" menjadi "${newStatus}".`,
     });
 }

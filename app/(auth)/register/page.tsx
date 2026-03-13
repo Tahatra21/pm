@@ -63,7 +63,7 @@ export default function RegisterPage() {
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
                         <Zap size={14} className="text-primary-foreground" />
                     </div>
-                    <span className="text-base font-semibold tracking-tight">ProjectFlow</span>
+                    <span className="text-base font-semibold tracking-tight">.Worktion</span>
                 </div>
 
                 <div className="space-y-4">
@@ -84,7 +84,7 @@ export default function RegisterPage() {
                     ))}
                 </div>
 
-                <p className="text-xs text-muted-foreground">ProjectFlow © 2026 · Internal Infrastructure</p>
+                <p className="text-xs text-muted-foreground">.Worktion © 2026 · Internal Infrastructure</p>
             </div>
 
             {/* Right form panel */}

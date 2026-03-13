@@ -1,8 +1,8 @@
-# Technical Requirements Document (TRD) — ProjectFlow
+# Technical Requirements Document (TRD) — .Worktion
 
 **Version:** 1.0.0  
 **Role:** Senior System Architect & Lead Developer  
-**Project:** ProjectFlow (Internal Project Management System)
+**Project:** .Worktion (Internal Project Management System)
 
 ---
 
