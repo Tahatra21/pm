@@ -10,6 +10,19 @@ export interface User {
   color: string;
 }
 
+export interface Stream {
+  id: string;
+  name: string;
+  description?: string;
+  isActive?: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  isActive?: string;
+}
+
 export interface Project {
   id: string;
   title: string;

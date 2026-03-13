@@ -39,10 +39,14 @@ const PRIORITY_LABEL: Record<string, string> = { urgent: "Urgent", high: "High",
 const STATUS_LABEL: Record<string, string> = { todo: "To Do", "in-progress": "In Progress", review: "Review", done: "Done" };
 
 /* ── Task Card ── */
-function TaskCard({ task, index, onClick, users }: { task: Task; index: number; onClick: (t: Task) => void; users: any[] }) {
+function TaskCard({ task, index, onClick, users, subtaskCounts }: {
+    task: Task; index: number; onClick: (t: Task) => void; users: any[];
+    subtaskCounts: Record<string, { total: number; done: number }>;
+}) {
     const assignee = task.assigneeId ? users.find((u) => u.id === task.assigneeId) : null;
     const overdue = task.dueDate && isOverdue(task.dueDate) && task.status !== "done";
     const tags = typeof task.tags === "string" ? JSON.parse(task.tags) : (Array.isArray(task.tags) ? task.tags : []);
+    const stCounts = subtaskCounts[task.id] || { total: 0, done: 0 };
 
     return (
         <Draggable draggableId={task.id} index={index}>
@@ -81,14 +85,19 @@ function TaskCard({ task, index, onClick, users }: { task: Task; index: number; 
                                     <Calendar size={11} /> {formatDate(task.dueDate)}
                                 </span>
                             )}
-                            
+
                             {/* Data Density Indicators */}
                             <div className="flex items-center gap-2.5 text-muted-foreground">
-                                <span className="flex items-center gap-0.5 text-[10px] font-mono"><CheckSquare size={10} /> 0/0</span>
+                                <span className={`flex items-center gap-0.5 text-[10px] font-mono ${
+                                    stCounts.total > 0 && stCounts.done === stCounts.total
+                                        ? "text-emerald-500 font-bold"
+                                        : stCounts.total > 0 ? "text-primary" : ""
+                                }`}>
+                                    <CheckSquare size={10} />
+                                    {stCounts.done}/{stCounts.total}
+                                </span>
                                 <span className="flex items-center gap-0.5 text-[10px] font-mono"><MessageSquare size={10} /> 0</span>
                                 {task.gitLink && <span className="flex items-center gap-0.5 text-[10px] font-mono text-primary"><Link2 size={10} /></span>}
-                                {/* Placeholder for Attachments if any */}
-                                {/* <span className="flex items-center gap-0.5 text-[10px] font-mono"><Paperclip size={10} /> 0</span> */}
                             </div>
                         </div>
                         {assignee && (
@@ -146,24 +155,24 @@ function AddTaskDialog({ status, projectId, open, onOpenChange, onAdd, users }: 
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        Tambah Tugas
+                        Add Task
                         <Badge variant="outline" className="text-[10px] font-normal">{STATUS_LABEL[status]}</Badge>
                     </DialogTitle>
-                    <DialogDescription>Buat tugas baru untuk kolom {STATUS_LABEL[status]}</DialogDescription>
+                    <DialogDescription>Create a new task for {STATUS_LABEL[status]}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
-                    <div><Label className="text-xs">Judul *</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Apa yang perlu diselesaikan?" className="mt-1.5" autoFocus onKeyDown={(e) => e.key === "Enter" && handleAdd()} /></div>
-                    <div><Label className="text-xs">Deskripsi</Label><Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Detail atau konteks..." rows={2} className="mt-1.5 resize-none" /></div>
+                    <div><Label className="text-xs">Title *</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" className="mt-1.5" autoFocus onKeyDown={(e) => e.key === "Enter" && handleAdd()} /></div>
+                    <div><Label className="text-xs">Description</Label><Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Details or context..." rows={2} className="mt-1.5 resize-none" /></div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label className="text-xs">Assignee</Label>
                             <Select value={assigneeId} onValueChange={setAssigneeId}>
-                                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih..." /></SelectTrigger>
+                                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select..." /></SelectTrigger>
                                 <SelectContent>{users.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label className="text-xs">Prioritas</Label>
+                            <Label className="text-xs">Priority</Label>
                             <Select value={priority} onValueChange={setPriority}>
                                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -174,13 +183,13 @@ function AddTaskDialog({ status, projectId, open, onOpenChange, onAdd, users }: 
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div><Label className="text-xs">Tenggat</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1.5" /></div>
+                        <div><Label className="text-xs">Deadline</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1.5" /></div>
                         <div><Label className="text-xs">Git Link</Label><Input value={gitLink} onChange={(e) => setGitLink(e.target.value)} placeholder="https://..." className="mt-1.5" /></div>
                     </div>
                 </div>
                 <DialogFooter>
-                    <DialogClose asChild><Button variant="outline">Batal</Button></DialogClose>
-                    <Button onClick={handleAdd} disabled={!title.trim()}>Tambah Tugas</Button>
+                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                    <Button onClick={handleAdd} disabled={!title.trim()}>Add Task</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -203,7 +212,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
         fetch(`/api/subtasks?taskId=${task.id}`)
             .then(r => r.json())
             .then(data => { if (Array.isArray(data)) setSubtaskList(data); })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoadingSub(false));
     }, [task?.id]);
 
@@ -225,7 +234,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                     })));
                 }
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoadingComments(false));
     }, [task?.id]);
 
@@ -240,6 +249,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
             const item = await res.json();
             setSubtaskList(prev => [...prev, item]);
             setNewSubtask("");
+            window.dispatchEvent(new CustomEvent("refresh-subtasks"));
         }
     };
 
@@ -251,6 +261,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
         });
         if (res.ok) {
             setSubtaskList(prev => prev.map(s => s.id === subtaskId ? { ...s, completed: !currentCompleted } : s));
+            window.dispatchEvent(new CustomEvent("refresh-subtasks"));
         }
     };
 
@@ -258,6 +269,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
         const res = await fetch(`/api/subtasks/${subtaskId}`, { method: "DELETE" });
         if (res.ok) {
             setSubtaskList(prev => prev.filter(s => s.id !== subtaskId));
+            window.dispatchEvent(new CustomEvent("refresh-subtasks"));
         }
     };
 
@@ -309,7 +321,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                             <TabsTrigger value="subtasks" className="text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
                                 Subtasks {totalCount > 0 && <span className="ml-1 text-[10px] text-muted-foreground">({completedCount}/{totalCount})</span>}
                             </TabsTrigger>
-                            <TabsTrigger value="activity" className="text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">Aktivitas</TabsTrigger>
+                            <TabsTrigger value="activity" className="text-xs font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">Activity</TabsTrigger>
                         </TabsList>
                     </div>
 
@@ -325,7 +337,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 p-3 rounded-xl bg-muted/20 border border-muted/30">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Prioritas</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Priority</p>
                                     <div className="flex items-center gap-2 text-sm font-medium">{PRIORITY_ICON[task.priority]} {PRIORITY_LABEL[task.priority]}</div>
                                 </div>
                                 {assignee && (
@@ -339,8 +351,8 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                                 )}
                                 {task.dueDate && (
                                     <div className="space-y-1.5 p-3 rounded-xl bg-muted/20 border border-muted/30">
-                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Tenggat</p>
-                                        <p className={`text-sm font-medium ${overdue ? "text-destructive" : ""}`}>{formatDate(task.dueDate)}{overdue && " · Terlambat"}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Deadline</p>
+                                        <p className={`text-sm font-medium ${overdue ? "text-destructive" : ""}`}>{formatDate(task.dueDate)}{overdue && " · Overdue"}</p>
                                     </div>
                                 )}
                             </div>
@@ -348,8 +360,8 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                             <Separator className="opacity-50" />
 
                             <div className="space-y-2">
-                                <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground/90"><span className="w-1 h-4 bg-primary rounded-full"></span>Deskripsi</h4>
-                                <p className="text-[13px] text-foreground/70 leading-relaxed whitespace-pre-wrap pl-3">{task.description || "Tidak direkam."}</p>
+                                <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground/90"><span className="w-1 h-4 bg-primary rounded-full"></span>Description</h4>
+                                <p className="text-[13px] text-foreground/70 leading-relaxed whitespace-pre-wrap pl-3">{task.description || "No description recorded."}</p>
                             </div>
 
                             {task.gitLink && (
@@ -363,7 +375,7 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                         {/* ── SUBTASKS TAB (REAL DATA) ── */}
                         <TabsContent value="subtasks" className="m-0 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {loadingSub ? (
-                                <p className="text-xs text-muted-foreground py-4 text-center">Memuat subtask...</p>
+                                <p className="text-xs text-muted-foreground py-4 text-center">Loading subtasks...</p>
                             ) : (
                                 <div className="space-y-2">
                                     {subtaskList.map((s) => (
@@ -386,18 +398,18 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                                         </label>
                                     ))}
                                     {subtaskList.length === 0 && (
-                                        <p className="text-xs text-muted-foreground py-4 text-center">Belum ada checklist. Tambahkan di bawah.</p>
+                                        <p className="text-xs text-muted-foreground py-4 text-center">No checklist yet. Add one below.</p>
                                     )}
                                     <div className="flex gap-2 mt-2">
                                         <Input
                                             value={newSubtask}
                                             onChange={(e) => setNewSubtask(e.target.value)}
                                             onKeyDown={(e) => e.key === "Enter" && handleAddSubtask()}
-                                            placeholder="Tulis checklist baru..."
+                                            placeholder="Write a new checklist..."
                                             className="text-xs h-9"
                                         />
                                         <Button variant="outline" size="sm" onClick={handleAddSubtask} disabled={!newSubtask.trim()} className="h-9 px-3 text-xs shrink-0">
-                                            <Plus size={14} className="mr-1" /> Tambah
+                                            <Plus size={14} className="mr-1" /> Add
                                         </Button>
                                     </div>
                                 </div>
@@ -408,9 +420,9 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                         <TabsContent value="activity" className="m-0 flex flex-col h-[calc(100vh-280px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-4">
                                 {loadingComments ? (
-                                    <p className="text-xs text-muted-foreground py-4 text-center">Memuat aktivitas...</p>
+                                    <p className="text-xs text-muted-foreground py-4 text-center">Loading activity...</p>
                                 ) : messages.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground py-4 text-center">Belum ada aktivitas. Tulis komentar pertama!</p>
+                                    <p className="text-xs text-muted-foreground py-4 text-center">No activity yet. Write the first comment!</p>
                                 ) : (
                                     messages.map((m) => {
                                         const initial = m.userName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
@@ -463,12 +475,12 @@ function TaskDetailSheet({ task, open, onOpenChange, currentUserId, users }: { t
                                                 value={comment}
                                                 onChange={(e) => setComment(e.target.value)}
                                                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                                                placeholder="Tulis komentar..."
+                                                placeholder="Write a comment..."
                                                 className="min-h-[70px] w-full resize-none text-[13px] bg-transparent border-0 focus-visible:ring-0 p-3 pb-10"
                                             />
                                             <div className="absolute bottom-2 left-3 right-2 flex justify-end items-center bg-background pt-1">
                                                 <Button size="sm" onClick={handleSend} disabled={!comment.trim()} className="h-7 px-4 text-xs font-semibold rounded-full shadow-sm">
-                                                    Kirim
+                                                    Send
                                                 </Button>
                                             </div>
                                         </div>
@@ -492,16 +504,46 @@ export default function KanbanBoard({ tasks: initial, projectId, onRefresh }: Ka
     const [users, setUsers] = useState<any[]>([]);
     const [addCol, setAddCol] = useState<TaskStatus | null>(null);
     const [selected, setSelected] = useState<Task | null>(null);
+    const [subtaskCounts, setSubtaskCounts] = useState<Record<string, { total: number; done: number }>>({});
 
     useEffect(() => {
         setTasks(initial);
     }, [initial]);
 
+    // Fetch all subtask counts for this project in one API call
+    const fetchSubtaskCounts = () => {
+        if (!projectId) return;
+        fetch(`/api/subtasks?projectId=${projectId}`)
+            .then(r => r.json())
+            .then((data: Array<{ taskId: string; completed: boolean }>) => {
+                if (!Array.isArray(data)) return;
+                const map: Record<string, { total: number; done: number }> = {};
+                data.forEach(s => {
+                    if (!map[s.taskId]) map[s.taskId] = { total: 0, done: 0 };
+                    map[s.taskId].total++;
+                    if (s.completed) map[s.taskId].done++;
+                });
+                setSubtaskCounts(map);
+            })
+            .catch(() => {});
+    };
+
+    useEffect(() => {
+        fetchSubtaskCounts();
+    }, [projectId, tasks]);
+
+    // Listen for subtask changes triggered from the detail sheet
+    useEffect(() => {
+        const handler = () => fetchSubtaskCounts();
+        window.addEventListener("refresh-subtasks", handler);
+        return () => window.removeEventListener("refresh-subtasks", handler);
+    }, [projectId]);
+
     useEffect(() => {
         fetch("/api/users")
             .then(r => r.json())
             .then(data => { if (Array.isArray(data)) setUsers(data); })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     const byCol = (s: TaskStatus) => tasks.filter((t) => t.status === s);
@@ -525,6 +567,7 @@ export default function KanbanBoard({ tasks: initial, projectId, onRefresh }: Ka
             });
             if (!res.ok) throw new Error();
             if (onRefresh) onRefresh(); // Trigger parent refresh for percentages
+            fetchSubtaskCounts(); // Refresh subtask UI counts
             window.dispatchEvent(new CustomEvent("refresh-projects")); // Sync Sidebar
         } catch (error) {
             // Revert on error
@@ -561,12 +604,12 @@ export default function KanbanBoard({ tasks: initial, projectId, onRefresh }: Ka
                                             {...provided.droppableProps}
                                             className={`flex-1 overflow-y-auto p-2.5 transition-colors ${snapshot.isDraggingOver ? "bg-primary/5" : ""}`}
                                         >
-                                            {colTasks.map((t, i) => <TaskCard key={t.id} task={t} index={i} onClick={setSelected} users={users} />)}
+                                            {colTasks.map((t, i) => <TaskCard key={t.id} task={t} index={i} onClick={setSelected} users={users} subtaskCounts={subtaskCounts} />)}
                                             {provided.placeholder}
                                             {colTasks.length === 0 && !snapshot.isDraggingOver && (
                                                 <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
                                                     <Circle size={20} className="opacity-30" />
-                                                    <p className="text-xs">Kosong</p>
+                                                    <p className="text-xs">Empty</p>
                                                 </div>
                                             )}
                                         </div>
@@ -576,7 +619,7 @@ export default function KanbanBoard({ tasks: initial, projectId, onRefresh }: Ka
                                 {/* Add task footer */}
                                 <div className="p-2.5 pt-0">
                                     <Button variant="outline" size="sm" className="w-full text-xs text-muted-foreground border-dashed gap-1.5 justify-start" onClick={() => setAddCol(col.id)}>
-                                        <Plus size={12} /> Tambah tugas
+                                        <Plus size={12} /> Add task
                                     </Button>
                                 </div>
                             </div>
@@ -585,7 +628,7 @@ export default function KanbanBoard({ tasks: initial, projectId, onRefresh }: Ka
                 </div>
             </DragDropContext>
 
-            <AddTaskDialog status={addCol!} projectId={projectId} open={!!addCol} onOpenChange={(o) => !o && setAddCol(null)} onAdd={(t) => { setTasks((p) => [t, ...p]); if (onRefresh) onRefresh(); window.dispatchEvent(new CustomEvent("refresh-projects")); }} users={users} />
+            <AddTaskDialog status={addCol!} projectId={projectId} open={!!addCol} onOpenChange={(o) => !o && setAddCol(null)} onAdd={(t) => { setTasks((p) => [t, ...p]); if (onRefresh) onRefresh(); fetchSubtaskCounts(); window.dispatchEvent(new CustomEvent("refresh-projects")); }} users={users} />
             <TaskDetailSheet task={selected} open={!!selected} onOpenChange={(o) => !o && setSelected(null)} currentUserId={user?.id} users={users} />
         </>
     );

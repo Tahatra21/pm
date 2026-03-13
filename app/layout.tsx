@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ProjectFlow — Manajemen Proyek Tim",
-  description: "Platform manajemen proyek internal untuk tim kolaboratif",
+  title: "ProjectFlow — Team Project Management",
+  description: "Internal project management platform for collaborative teams",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.variable} ${inter.variable} bg-background text-foreground font-body`}>
         <ThemeProvider
           attribute="class"

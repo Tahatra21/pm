@@ -1,17 +1,17 @@
 import { db } from "@/lib/db";
-import { tasks } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 // GET /api/tasks/[id]
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        const taskResult = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
-        const task = taskResult[0];
+        const task = await db.tbl_tasks.findUnique({
+            where: { id }
+        });
         if (!task) return NextResponse.json({ error: "Task not found" }, { status: 404 });
         return NextResponse.json(task);
     } catch (error) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to fetch task" }, { status: 500 });
     }
 }
@@ -36,11 +36,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             }
         }
 
-        await db.update(tasks).set(updateData).where(eq(tasks.id, id));
-        const updatedResult = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
-        const updated = updatedResult[0];
+        const updated = await db.tbl_tasks.update({
+            where: { id },
+            data: updateData
+        });
+
         return NextResponse.json(updated);
     } catch (error) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
     }
 }
@@ -49,9 +52,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        await db.delete(tasks).where(eq(tasks.id, id));
+        await db.tbl_tasks.delete({
+            where: { id }
+        });
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
     }
 }

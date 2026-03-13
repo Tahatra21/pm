@@ -1,6 +1,4 @@
 import { db } from "@/lib/db";
-import { tasks, projects } from "@/lib/db/schema";
-import { eq, isNotNull, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -11,26 +9,28 @@ export async function GET(req: Request) {
         const useStreamFilter = streamId && streamId !== "all";
         const useStatusFilter = status && status !== "all";
 
-        const conditions = [isNotNull(tasks.startDate)];
-        if (useStreamFilter) {
-            conditions.push(eq(projects.streamId, streamId));
-        }
-        if (useStatusFilter) {
-            conditions.push(eq(tasks.status, status as any));
-        }
+        const timelineTasks = await db.tbl_tasks.findMany({
+            where: {
+                startDate: { not: null },
+                ...(useStreamFilter && {
+                    projects: {
+                        streamId: streamId
+                    }
+                }),
+                ...(useStatusFilter && {
+                    status: status
+                })
+            },
+            select: {
+                id: true,
+                title: true,
+                startDate: true,
+                dueDate: true,
+                status: true,
+                projectId: true,
+            }
+        });
 
-        const timelineTasks = await db.select({
-            id: tasks.id,
-            title: tasks.title,
-            startDate: tasks.startDate,
-            dueDate: tasks.dueDate,
-            status: tasks.status,
-            projectId: tasks.projectId,
-        })
-            .from(tasks)
-            .innerJoin(projects, eq(tasks.projectId, projects.id))
-            .where(and(...conditions));
-            
         return NextResponse.json(timelineTasks);
     } catch (error) {
         console.error("Timeline API Error:", error);

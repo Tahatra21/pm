@@ -1,25 +1,32 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { contacts, projects } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
 export async function GET() {
     try {
-        const data = await db.select({
-            id: contacts.id,
-            name: contacts.name,
-            company: contacts.company,
-            email: contacts.email,
-            phone: contacts.phone,
-            projectId: contacts.projectId,
-            projectTitle: projects.title,
-            notes: contacts.notes,
-        })
-        .from(contacts)
-        .leftJoin(projects, eq(contacts.projectId, projects.id))
-        .orderBy(contacts.name);
-        return NextResponse.json(data);
+        const results = await db.tbl_contacts.findMany({
+            include: {
+                projects: {
+                    select: {
+                        title: true
+                    }
+                }
+            },
+            orderBy: { name: "asc" }
+        });
+
+        const formattedResults = results.map(c => ({
+            id: c.id,
+            name: c.name,
+            company: c.company,
+            email: c.email,
+            phone: c.phone,
+            projectId: c.projectId,
+            projectTitle: c.projects?.title || null,
+            notes: c.notes,
+        }));
+
+        return NextResponse.json(formattedResults);
     } catch (error) {
         console.error("Contacts GET Error:", error);
         return NextResponse.json({ error: "Failed to fetch contacts" }, { status: 500 });
@@ -35,17 +42,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        const newContact = await db.insert(contacts).values({
-            id: randomUUID(),
-            name,
-            company,
-            email,
-            phone,
-            notes,
-            createdAt: new Date(),
-        }).returning();
+        const newContact = await db.tbl_contacts.create({
+            data: {
+                id: randomUUID(),
+                name,
+                company,
+                email,
+                phone,
+                notes,
+                createdAt: new Date(),
+            }
+        });
 
-        return NextResponse.json(newContact[0]);
+        return NextResponse.json(newContact);
     } catch (error) {
         console.error("Contacts POST Error:", error);
         return NextResponse.json({ error: "Failed to create contact" }, { status: 500 });

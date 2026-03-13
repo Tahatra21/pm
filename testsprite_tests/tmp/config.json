@@ -1,12 +1,11 @@
 {
   "status": "commited",
-  "type": "frontend",
+  "type": "backend",
   "scope": "codebase",
   "localEndpoint": "http://localhost:3000",
-  "loginUser": "andi.pratama@company.com",
-  "loginPassword": "password123",
+  "backendAuthType": "public",
   "executionArgs": {
-    "projectName": "pm",
+    "projectName": "",
     "projectPath": "/Users/jmaharyuda/Project/pm",
     "testIds": [],
     "additionalInstruction": "",
@@ -15,6 +14,6 @@
       "API_KEY": "sk-user-vey8B6p4O5DSCeeCQZ-PD_jkZrJTZgxdNapr5qwENWN3KGSje7NKe__9X5gqDfAJOla1ilZ7lGKzF_2X4mWG4mIt5Bu5wT9wl5jNmMEb2TKdakRRfkW-AUDBQbD6N55Irxs"
     }
   },
-  "serverPort": 64348,
-  "proxy": "http://2dbb2909-c985-4a99-abfd-9508ee973f0d:3iNrGUducsbHfPLXLTy1pXqJAWrqL2LK@tun.testsprite.com:8080"
+  "serverPort": 60185,
+  "proxy": "http://4435b560-3e71-49b9-8fbc-dd897b8efe23:EG5AiIEF69TZSs5gm7M1BeYqqwK7ovHB@tun.testsprite.com:8080"
 }

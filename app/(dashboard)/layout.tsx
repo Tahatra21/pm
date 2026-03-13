@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {/* Mobile sidebar via Sheet */}
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetContent side="left" className="p-0 w-[240px]">
-                        <SheetTitle className="sr-only">Navigasi</SheetTitle>
+                        <SheetTitle className="sr-only">Navigation</SheetTitle>
                         <Sidebar />
                     </SheetContent>
                 </Sheet>

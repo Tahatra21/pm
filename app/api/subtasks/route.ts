@@ -1,21 +1,43 @@
 import { db } from "@/lib/db";
-import { subtasks } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
-// GET /api/subtasks?taskId=xxx
+// GET /api/subtasks?taskId=xxx  OR  ?projectId=xxx
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const taskId = searchParams.get("taskId");
-        if (!taskId) return NextResponse.json({ error: "taskId is required" }, { status: 400 });
+        const projectId = searchParams.get("projectId");
 
-        const results = await db.select().from(subtasks).where(eq(subtasks.taskId, taskId));
-        // Sort by sortOrder
-        results.sort((a, b) => parseInt(a.sortOrder || "0") - parseInt(b.sortOrder || "0"));
+        if (!taskId && !projectId) {
+            return NextResponse.json({ error: "taskId or projectId is required" }, { status: 400 });
+        }
 
-        return NextResponse.json(results.map(s => ({
+        let results;
+        if (projectId) {
+            // Fetch all subtasks for all tasks belonging to a project
+            results = await db.tbl_subtasks.findMany({
+                where: {
+                    tasks: {
+                        projectId,
+                    }
+                },
+                select: {
+                    id: true,
+                    taskId: true,
+                    completed: true,
+                    sortOrder: true,
+                },
+                orderBy: { sortOrder: "asc" }
+            });
+        } else {
+            results = await db.tbl_subtasks.findMany({
+                where: { taskId: taskId! },
+                orderBy: { sortOrder: "asc" }
+            });
+        }
+
+        return NextResponse.json(results.map((s: any) => ({
             ...s,
             completed: s.completed === "true",
             sortOrder: parseInt(s.sortOrder || "0"),
@@ -33,16 +55,29 @@ export async function POST(request: Request) {
         const { taskId, title } = body;
         if (!taskId || !title) return NextResponse.json({ error: "taskId and title are required" }, { status: 400 });
 
-        const id = randomUUID();
         // Get current count for sort order
-        const existing = await db.select().from(subtasks).where(eq(subtasks.taskId, taskId));
-        const sortOrder = String(existing.length);
+        const count = await db.tbl_subtasks.count({
+            where: { taskId }
+        });
+        const sortOrder = String(count);
 
-        await db.insert(subtasks).values({
-            id, taskId, title, completed: "false", sortOrder, createdAt: new Date(),
+        const newSubtask = await db.tbl_subtasks.create({
+            data: {
+                id: randomUUID(),
+                taskId,
+                title,
+                completed: "false",
+                sortOrder,
+                createdAt: new Date(),
+            }
         });
 
-        return NextResponse.json({ id, taskId, title, completed: false, sortOrder: parseInt(sortOrder), createdAt: new Date().toISOString() }, { status: 201 });
+        return NextResponse.json({
+            ...newSubtask,
+            completed: false,
+            sortOrder: parseInt(sortOrder),
+            createdAt: newSubtask.createdAt.toISOString()
+        }, { status: 201 });
     } catch (error) {
         console.error("Subtasks POST error:", error);
         return NextResponse.json({ error: "Failed to create subtask" }, { status: 500 });

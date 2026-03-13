@@ -12,14 +12,23 @@ interface AuthUser {
 
 interface AuthContextType {
     user: AuthUser | null;
+    settings: any;
     loading: boolean;
     refresh: () => void;
+    refreshSettings: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, refresh: () => {} });
+const AuthContext = createContext<AuthContextType>({ 
+    user: null, 
+    settings: {}, 
+    loading: true, 
+    refresh: () => {},
+    refreshSettings: () => {}
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null);
+    const [settings, setSettings] = useState<any>({});
     const [loading, setLoading] = useState(true);
 
     const fetchUser = () => {
@@ -34,10 +43,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .finally(() => setLoading(false));
     };
 
-    useEffect(() => { fetchUser(); }, []);
+    const fetchSettings = () => {
+        fetch("/api/admin/settings")
+            .then(r => r.json())
+            .then(data => {
+                if (data) setSettings(data);
+            })
+            .catch(() => {});
+    };
+
+    useEffect(() => { 
+        fetchUser(); 
+        fetchSettings();
+    }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, refresh: fetchUser }}>
+        <AuthContext.Provider value={{ 
+            user, 
+            settings, 
+            loading, 
+            refresh: fetchUser,
+            refreshSettings: fetchSettings
+        }}>
             {children}
         </AuthContext.Provider>
     );

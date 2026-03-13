@@ -1,7 +1,7 @@
-import { Task } from "@/lib/types";
+import { Task, User } from "@/lib/types";
 import { getInitials, STATUS_WEIGHTS, formatDateShort } from "@/lib/utils";
 import { addDays, startOfWeek, format, differenceInDays, parseISO, isToday, startOfDay, addWeeks, addMonths, addYears, startOfMonth, startOfYear, isSameDay, getWeek, getQuarter } from "date-fns";
-import { id } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { useState, useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays as CalendarIcon, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,19 +18,25 @@ const STATUS_LABELS: Record<string, string> = {
 
 type ZoomLevel = "day" | "week" | "month" | "year";
 
-interface TimelineViewProps { tasks: Task[]; }
+interface TimelineViewProps {
+    tasks: Task[];
+    users: User[];
+}
 
-export default function TimelineView({ tasks }: TimelineViewProps) {
-    const [users, setUsers] = useState<any[]>([]);
+export default function TimelineView({ tasks, users }: TimelineViewProps) {
     const [zoom, setZoom] = useState<ZoomLevel>("day");
-    const [startDate, setStartDate] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+    const [startDate, setStartDate] = useState<Date>(new Date(2024, 0, 1)); // Stable dummy date for SSR
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        fetch("/api/users")
-            .then(r => r.json())
-            .then(data => { if (Array.isArray(data)) setUsers(data); })
-            .catch(() => {});
+        setMounted(true);
+        setStartDate(startOfWeek(new Date(), { weekStartsOn: 1 }));
     }, []);
+
+    // Force stable initial date on hydration if needed, 
+    // but usually startOfWeek(new Date()) is stable enough if timezones match.
+    // The bigger issue is the 'Today' line which uses new Date() in the render.
+    
 
     const zoomConfig = useMemo(() => {
         switch (zoom) {
@@ -94,10 +100,10 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
         const clampedEnd = Math.min(endOff, totalDays);
         const duration = clampedEnd - clampedStart;
 
-        return { 
-            left: clampedStart * dayWidth, 
-            width: Math.max(duration * dayWidth, 4), 
-            color: STATUS_COLORS[task.status] 
+        return {
+            left: clampedStart * dayWidth,
+            width: Math.max(duration * dayWidth, 4),
+            color: STATUS_COLORS[task.status]
         };
     };
 
@@ -106,44 +112,44 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
     // Compute dynamic headers
     const headerLevels = useMemo(() => {
         const levels: { label: string; width: number; isNewGroup: boolean }[][] = [[], [], []];
-        
+
         displayGrid.forEach((date, i) => {
             const width = (unit === "day" ? 1 : 7) * dayWidth;
             const prevDate = i > 0 ? displayGrid[i - 1] : null;
-            
+
             if (zoom === "day") {
-                levels[0].push({ label: format(date, "MMMM yyyy", { locale: id }), width, isNewGroup: i === 0 || date.getDate() === 1 });
-                levels[1].push({ label: format(date, "EEE", { locale: id }).slice(0, 2), width, isNewGroup: true });
+                levels[0].push({ label: format(date, "MMMM yyyy", { locale: enUS }), width, isNewGroup: i === 0 || date.getDate() === 1 });
+                levels[1].push({ label: format(date, "EEE", { locale: enUS }).slice(0, 2), width, isNewGroup: true });
                 levels[2].push({ label: format(date, "d"), width, isNewGroup: true });
             } else if (zoom === "week") {
-                levels[0].push({ label: format(date, "MMMM yyyy", { locale: id }), width: width * 1, isNewGroup: i === 0 || date.getDate() <= 7 });
+                levels[0].push({ label: format(date, "MMMM yyyy", { locale: enUS }), width: width * 1, isNewGroup: i === 0 || date.getDate() <= 7 });
                 levels[1].push({ label: `W${getWeek(date)}`, width, isNewGroup: true });
             } else if (zoom === "month") {
                 const width = (unit === "day" ? 1 : 7) * dayWidth;
-                levels[0].push({ label: format(date, "MMMM yyyy", { locale: id }), width, isNewGroup: i === 0 || date.getDate() <= 7 });
+                levels[0].push({ label: format(date, "MMMM yyyy", { locale: enUS }), width, isNewGroup: i === 0 || date.getDate() <= 7 });
                 levels[1].push({ label: `W${Math.ceil(date.getDate() / 7)}`, width, isNewGroup: true });
             } else if (zoom === "year") {
                 const q = getQuarter(date);
 
                 // Level 0: Year
-                levels[0].push({ 
-                    label: format(date, "yyyy"), 
-                    width, 
-                    isNewGroup: !prevDate || date.getFullYear() !== prevDate.getFullYear() 
+                levels[0].push({
+                    label: format(date, "yyyy"),
+                    width,
+                    isNewGroup: !prevDate || date.getFullYear() !== prevDate.getFullYear()
                 });
-                
+
                 // Level 1: Quarter
-                levels[1].push({ 
-                    label: `Q${q}`, 
-                    width, 
-                    isNewGroup: !prevDate || q !== getQuarter(prevDate) 
+                levels[1].push({
+                    label: `Q${q}`,
+                    width,
+                    isNewGroup: !prevDate || q !== getQuarter(prevDate)
                 });
-                
+
                 // Level 2: Month
-                levels[2].push({ 
-                    label: format(date, "MMM", { locale: id }), 
-                    width, 
-                    isNewGroup: !prevDate || date.getMonth() !== prevDate.getMonth() 
+                levels[2].push({
+                    label: format(date, "MMM", { locale: enUS }),
+                    width,
+                    isNewGroup: !prevDate || date.getMonth() !== prevDate.getMonth()
                 });
             }
         });
@@ -153,7 +159,7 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
             const filtered: typeof level = [];
             let currentGroupWidth = 0;
             let currentLabel = "";
-            
+
             level.forEach((item, i) => {
                 if (item.isNewGroup || (i > 0 && item.label !== level[i - 1].label)) {
                     if (filtered.length > 0) filtered[filtered.length - 1].width = currentGroupWidth;
@@ -178,7 +184,7 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-1.5">
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={goBack}><ChevronLeft size={14} /></Button>
-                        <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={goToday}>Hari ini</Button>
+                        <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={goToday}>Today</Button>
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={goForward}><ChevronRight size={14} /></Button>
                     </div>
 
@@ -200,7 +206,7 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                     else setStartDate(startOfYear(new Date()));
                                 }}
                             >
-                                {z === "day" ? "Harian" : z === "week" ? "Mingguan" : z === "month" ? "Bulanan" : "Tahunan"}
+                                {z === "day" ? "Daily" : z === "week" ? "Weekly" : z === "month" ? "Monthly" : "Yearly"}
                             </Button>
                         ))}
                     </div>
@@ -216,9 +222,9 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                     <div key={i} className="border-r border-border/50 py-2 px-1 flex-shrink-0 text-center flex flex-col justify-center overflow-hidden" style={{ width: `${item.width}px` }}>
                                         <span className={cn(
                                             "truncate px-1",
-                                            lIndex === 0 ? "text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest" : 
-                                            lIndex === 1 ? "text-[9px] font-bold text-muted-foreground uppercase" : 
-                                            "text-[10px] font-extrabold text-foreground/90"
+                                            lIndex === 0 ? "text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest" :
+                                                lIndex === 1 ? "text-[9px] font-bold text-muted-foreground uppercase" :
+                                                    "text-[10px] font-extrabold text-foreground/90"
                                         )}>
                                             {item.label}
                                         </span>
@@ -255,20 +261,20 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                         </div>
                                         <div className="relative h-full" style={{ width: `${totalWidth}px`, flexShrink: 0 }}>
                                             {/* Today line */}
-                                            {zoom === "day" && (
+                                            {mounted && zoom === "day" && (
                                                 <div className="absolute top-0 bottom-0 w-px bg-primary/40 z-10" style={{ left: `${differenceInDays(new Date(), startDate) * dayWidth + dayWidth / 2}px` }} />
                                             )}
                                             {bar && (
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                        <div 
-                                                            className="absolute top-1/2 -translate-y-1/2 h-9 rounded-xl flex items-center px-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md border border-white/20 group/bar overflow-hidden" 
-                                                            style={{ 
-                                                                left: `${bar.left}px`, 
-                                                                width: `${bar.width}px`, 
-                                                                backgroundColor: bar.color, 
-                                                                opacity: task.status === "done" ? 0.6 : 1 
-                                                            }} 
+                                                        <div
+                                                            className="absolute top-1/2 -translate-y-1/2 h-9 rounded-xl flex items-center px-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md border border-white/20 group/bar overflow-hidden"
+                                                            style={{
+                                                                left: `${bar.left}px`,
+                                                                width: `${bar.width}px`,
+                                                                backgroundColor: bar.color,
+                                                                opacity: task.status === "done" ? 0.6 : 1
+                                                            }}
                                                         >
                                                             {/* Progress highlight */}
                                                             <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10">
@@ -296,11 +302,11 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                                                             </div>
                                                             <div className="pt-2 border-t border-border flex items-center justify-between">
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Mulai</span>
+                                                                    <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Start</span>
                                                                     <span className="text-[10px] font-bold text-foreground/90">{task.startDate ? formatDateShort(task.startDate) : "-"}</span>
                                                                 </div>
                                                                 <div className="flex flex-col items-end">
-                                                                    <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Tenggat</span>
+                                                                    <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Deadline</span>
                                                                     <span className="text-[10px] font-bold text-foreground/90">{task.dueDate ? formatDateShort(task.dueDate) : "-"}</span>
                                                                 </div>
                                                             </div>
@@ -315,8 +321,8 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                             {timelineTasks.length === 0 && (
                                 <div className="py-20 text-center flex flex-col items-center justify-center bg-muted/30">
                                     <CalendarIcon className="text-slate-200 mb-3" size={40} />
-                                    <p className="text-sm font-bold text-muted-foreground/80">Tidak ada jadwal aktif</p>
-                                    <p className="text-xs text-muted-foreground/60 mt-1">Tambahkan tanggal mulai/tenggat pada tugas.</p>
+                                    <p className="text-sm font-bold text-muted-foreground/80">No active schedule</p>
+                                    <p className="text-xs text-muted-foreground/60 mt-1">Add start date/deadline to tasks.</p>
                                 </div>
                             )}
                         </div>
@@ -335,7 +341,7 @@ export default function TimelineView({ tasks }: TimelineViewProps) {
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/80/50 rounded-lg border border-border/50">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                        <span className="text-[9px] font-bold text-foreground/80 uppercase tracking-widest leading-none">Sinkronisasi Aktif</span>
+                        <span className="text-[9px] font-bold text-foreground/80 uppercase tracking-widest leading-none">Sync Active</span>
                     </div>
                 </div>
             </div>

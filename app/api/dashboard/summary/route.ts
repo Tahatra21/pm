@@ -1,6 +1,4 @@
 import { db } from "@/lib/db";
-import { tasks, projects } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -9,16 +7,13 @@ export async function GET(req: Request) {
         const streamId = searchParams.get("streamId");
         const useStreamFilter = streamId && streamId !== "all";
 
-        const conditions = [];
-        if (useStreamFilter) {
-            conditions.push(eq(projects.streamId, streamId));
-        }
+        const allTasks = await db.tbl_tasks.findMany({
+            where: {
+                ...(useStreamFilter && { projects: { streamId } })
+            },
+            select: { status: true }
+        });
 
-        const allTasks = await db.select({ status: tasks.status })
-            .from(tasks)
-            .innerJoin(projects, eq(tasks.projectId, projects.id))
-            .where(and(...conditions));
-        
         const total = allTasks.length;
         const counts = {
             todo: allTasks.filter(t => t.status === "todo").length,

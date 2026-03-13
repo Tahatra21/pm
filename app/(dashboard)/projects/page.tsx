@@ -4,9 +4,9 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Header from "@/components/layout/header";
 import { getInitials } from "@/lib/utils";
-import { 
+import {
     Plus, FolderOpen, MoreHorizontal, Pencil, Trash2, Ship, Zap, Filter, Search,
-    X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight 
+    X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,21 +68,21 @@ function ProjectDialog({ open, onOpenChange, project, onSave, streams, tags }: {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg rounded-[32px] p-0 overflow-hidden border-border shadow-2xl">
                 <DialogHeader className="p-8 pb-4 bg-muted/50 border-b border-border">
-                    <DialogTitle className="text-title-large text-foreground">{isEdit ? "Edit Proyek" : "Buat Proyek Baru"}</DialogTitle>
-                    <DialogDescription className="text-body-medium text-muted-foreground">Isi detail informasi proyek di bawah ini.</DialogDescription>
+                    <DialogTitle className="text-title-large text-foreground">{isEdit ? "Edit Project" : "Create New Project"}</DialogTitle>
+                    <DialogDescription className="text-body-medium text-muted-foreground">Fill in the project details below.</DialogDescription>
                 </DialogHeader>
                 <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
                     <div className="space-y-2">
-                        <Label className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Nama Proyek *</Label>
+                        <Label className="text-label-xs text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Project Name *</Label>
                         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="cth. Website Redesign Q2" className="rounded-xl border-border bg-muted/50 font-medium focus:ring-blue-500 text-body-medium h-11" autoFocus />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Stream *</Label>
+                            <Label className="text-label-xs text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Stream *</Label>
                             <Select value={streamId} onValueChange={setStreamId}>
                                 <SelectTrigger className="rounded-xl border-border bg-muted/50 font-medium focus:ring-blue-500 text-body-medium h-11">
-                                    <SelectValue placeholder="Pilih Stream" />
+                                    <SelectValue placeholder="Select Stream" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl border-border shadow-xl">
                                     {streams.filter(s => s.isActive === "true" || s.id === project?.streamId).map(s => (
@@ -92,21 +92,21 @@ function ProjectDialog({ open, onOpenChange, project, onSave, streams, tags }: {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Warna</Label>
+                            <Label className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Color</Label>
                             <div className="flex gap-1.5 h-11 items-center px-1">
                                 {PROJECT_COLORS.map((c) => (
-                                    <button 
-                                        key={c} 
-                                        type="button" 
-                                        onClick={() => setColor(c)} 
+                                    <button
+                                        key={c}
+                                        type="button"
+                                        onClick={() => setColor(c)}
                                         className={cn(
                                             "w-6 h-6 rounded-full transition-all duration-150 shrink-0",
                                             color === c ? "ring-2 ring-offset-2" : ""
-                                        )} 
-                                        style={{ 
-                                            backgroundColor: c, 
-                                            border: color === c ? "2px solid white" : "none" 
-                                        }} 
+                                        )}
+                                        style={{
+                                            backgroundColor: c,
+                                            border: color === c ? "2px solid white" : "none"
+                                        }}
                                     />
                                 ))}
                             </div>
@@ -114,11 +114,11 @@ function ProjectDialog({ open, onOpenChange, project, onSave, streams, tags }: {
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Tags (Optional)</Label>
+                        <Label className="text-label-xs text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Tags (Optional)</Label>
                         <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-xl border border-border min-h-[44px]">
                             {tags.filter(t => t.isActive === "true" || project?.tags?.includes(t.id)).map(t => (
-                                <Badge 
-                                    key={t.id} 
+                                <Badge
+                                    key={t.id}
                                     variant={selectedTags.includes(t.id) ? "default" : "outline"}
                                     onClick={() => toggleTag(t.id)}
                                     className={cn(
@@ -129,19 +129,19 @@ function ProjectDialog({ open, onOpenChange, project, onSave, streams, tags }: {
                                     {t.name}
                                 </Badge>
                             ))}
-                            {tags.length === 0 && <span className="text-xs text-muted-foreground/60 font-medium italic">Belum ada tag tersedia</span>}
+                            {tags.length === 0 && <span className="text-xs text-muted-foreground/60 font-medium italic">No tags available</span>}
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Deskripsi</Label>
-                        <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Jelaskan tujuan proyek ini..." rows={3} className="rounded-xl border-border bg-muted/50 font-normal focus:ring-blue-500 text-body-medium resize-none py-3" />
+                        <Label className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] pl-1">Description</Label>
+                        <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Describe project purpose..." rows={3} className="rounded-xl border-border bg-muted/50 font-normal focus:ring-blue-500 text-body-medium resize-none py-3" />
                     </div>
                 </div>
                 <DialogFooter className="p-8 pt-4 bg-muted/50 border-t border-border">
-                    <DialogClose asChild><Button variant="ghost" className="rounded-xl font-medium text-label-large text-muted-foreground hover:text-foreground border-transparent hover:bg-muted/60">Batal</Button></DialogClose>
+                    <DialogClose asChild><Button variant="ghost" className="rounded-xl font-medium text-label-large text-muted-foreground hover:text-foreground border-transparent hover:bg-muted/60">Cancel</Button></DialogClose>
                     <Button onClick={handleSave} disabled={!title.trim() || !streamId} className="rounded-xl bg-primary hover:bg-primary/90 font-medium text-label-large shadow-lg shadow-primary/20 text-white px-6">
-                        {isEdit ? "Simpan Perubahan" : "Buat Proyek"}
+                        {isEdit ? "Save Changes" : "Create Project"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -157,14 +157,14 @@ function DeleteDialog({ open, onOpenChange, projectTitle, onConfirm }: {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-sm rounded-[32px] p-8 border-border shadow-2xl">
                 <DialogHeader>
-                    <DialogTitle className="text-title-medium text-foreground">Hapus Proyek</DialogTitle>
+                    <DialogTitle className="text-title-medium text-foreground">Delete Project</DialogTitle>
                     <DialogDescription className="text-body-medium text-muted-foreground mt-2">
-                        Apakah Anda yakin ingin menghapus proyek <strong className="text-foreground font-medium">{projectTitle}</strong>? Tindakan ini tidak dapat dibatalkan.
+                        Are you sure you want to delete proyek <strong className="text-foreground font-medium">{projectTitle}</strong>? This action cannot be undone.
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="mt-8 gap-2">
-                    <DialogClose asChild><Button variant="ghost" className="rounded-xl font-medium text-label-large text-muted-foreground hover:text-foreground flex-1">Batal</Button></DialogClose>
-                    <Button variant="destructive" className="rounded-xl font-medium text-label-large flex-1 shadow-lg shadow-red-100" onClick={() => { onConfirm(); onOpenChange(false); }}>Hapus</Button>
+                    <DialogClose asChild><Button variant="ghost" className="rounded-xl font-medium text-label-large text-muted-foreground hover:text-foreground flex-1">Cancel</Button></DialogClose>
+                    <Button variant="destructive" className="rounded-xl font-medium text-label-large flex-1 shadow-lg shadow-red-100" onClick={() => { onConfirm(); onOpenChange(false); }}>Delete</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -193,15 +193,17 @@ export default function ProjectsPage() {
             const [pRes, uRes, sRes, tRes] = await Promise.all([
                 fetch("/api/projects"),
                 fetch("/api/users"),
-                fetch("/api/admin/streams"),
-                fetch("/api/admin/tags")
+                fetch("/api/admin/streams?limit=100"),
+                fetch("/api/admin/tags?limit=100")
             ]);
             const [p, u, s, t] = await Promise.all([pRes.json(), uRes.json(), sRes.json(), tRes.json()]);
             if (Array.isArray(p)) setProjects(p);
             if (Array.isArray(u)) setUsers(u);
-            if (Array.isArray(s)) setStreams(s);
-            if (Array.isArray(t)) setTags(t);
-        } catch (error) {}
+            if (s.data && Array.isArray(s.data)) setStreams(s.data);
+            else if (Array.isArray(s)) setStreams(s);
+            if (t.data && Array.isArray(t.data)) setTags(t.data);
+            else if (Array.isArray(t)) setTags(t);
+        } catch (error) { }
     };
 
     useEffect(() => { fetchAll(); }, []);
@@ -242,8 +244,8 @@ export default function ProjectsPage() {
             .filter(p => {
                 const matchesStream = filterStream === "all" || p.streamId === filterStream;
                 const matchesTag = filterTag === "all" || p.tags?.includes(filterTag);
-                const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                    p.description.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.description.toLowerCase().includes(searchQuery.toLowerCase());
                 return matchesStream && matchesTag && matchesSearch;
             })
             .sort((a, b) => {
@@ -270,34 +272,34 @@ export default function ProjectsPage() {
     return (
         <TooltipProvider>
             <div className="flex flex-col h-full overflow-hidden bg-muted/50">
-                <Header breadcrumb={[{ label: "Proyek" }]} />
-                
-                <div className="flex-1 overflow-y-auto px-8 py-8">
-                    <div className="max-w-[1400px] mx-auto space-y-6">
+                <Header breadcrumb={[{ label: "Projects" }]} />
+
+                <div className="flex-1 overflow-y-auto px-4 lg:px-8 py-6">
+                    <div className="max-w-[1400px] mx-auto space-y-4">
                         {/* Header Controls */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-[32px] border border-border/60 shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-4 lg:p-6 rounded-[32px] border border-border/60 shadow-sm">
                             <div className="flex flex-col">
-                                <h1 className="text-headline-medium text-foreground">Proyek</h1>
-                                <p className="text-body-medium text-muted-foreground/60">{filteredProjects.length} proyek ditemukan</p>
+                                <h1 className="text-headline-medium text-foreground">Projects</h1>
+                                <p className="text-body-medium text-muted-foreground/60">{filteredProjects.length} projects found</p>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
                                 <div className="relative group">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-hover:text-primary transition-colors" size={14} />
-                                    <Input 
-                                        placeholder="Cari proyek..." 
+                                    <Input
+                                        placeholder="Search projects..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-9 w-[240px] rounded-xl border-border bg-muted/50 font-normal text-label-medium h-9 transition-all focus:bg-card" 
+                                        className="pl-9 w-[240px] rounded-xl border-border bg-muted/50 font-normal text-label-medium h-9 transition-all focus:bg-card"
                                     />
                                 </div>
-                                
+
                                 <Select value={filterStream} onValueChange={setFilterStream}>
                                     <SelectTrigger className="w-[160px] rounded-xl border-border bg-muted/50 font-medium text-label-medium h-9">
-                                        <SelectValue placeholder="Stream" />
+                                        <SelectValue placeholder="Select Stream" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-border shadow-xl">
-                                        <SelectItem value="all" className="rounded-lg font-medium text-body-medium">Semua Stream</SelectItem>
+                                        <SelectItem value="all" className="rounded-lg font-medium text-body-medium">All Streams</SelectItem>
                                         {streams.map(s => (
                                             <SelectItem key={s.id} value={s.id} className="rounded-lg font-medium text-body-medium">{s.name}</SelectItem>
                                         ))}
@@ -309,7 +311,7 @@ export default function ProjectsPage() {
                                         <SelectValue placeholder="Tag" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-border shadow-xl">
-                                        <SelectItem value="all" className="rounded-lg font-medium text-body-medium">Semua Tag</SelectItem>
+                                        <SelectItem value="all" className="rounded-lg font-medium text-body-medium">All Tags</SelectItem>
                                         {tags.map(t => (
                                             <SelectItem key={t.id} value={t.id} className="rounded-lg font-medium text-body-medium">{t.name}</SelectItem>
                                         ))}
@@ -318,12 +320,12 @@ export default function ProjectsPage() {
 
                                 <Select value={sortField} onValueChange={(val: any) => setSortField(val)}>
                                     <SelectTrigger className="w-[120px] rounded-xl border-border bg-muted/50 font-medium text-label-medium h-9">
-                                        <SelectValue placeholder="Urutkan" />
+                                        <SelectValue placeholder="Sort By" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-border shadow-xl">
-                                        <SelectItem value="title" className="rounded-lg font-medium text-body-medium text-foreground">Nama</SelectItem>
+                                        <SelectItem value="title" className="rounded-lg font-medium text-body-medium text-foreground">Name</SelectItem>
                                         <SelectItem value="progress" className="rounded-lg font-medium text-body-medium text-foreground">Progress</SelectItem>
-                                        <SelectItem value="createdAt" className="rounded-lg font-medium text-body-medium text-foreground">Terbaru</SelectItem>
+                                        <SelectItem value="createdAt" className="rounded-lg font-medium text-body-medium text-foreground">Newest</SelectItem>
                                     </SelectContent>
                                 </Select>
 
@@ -337,7 +339,7 @@ export default function ProjectsPage() {
 
                                 <Button onClick={() => setShowCreate(true)} className="gap-2 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 text-white rounded-xl px-4 h-9">
                                     <Plus size={14} strokeWidth={3} />
-                                    <span className="font-medium text-label-large text-white">Proyek Baru</span>
+                                    <span className="font-medium text-label-large text-white">New Project</span>
                                 </Button>
                             </div>
                         </div>
@@ -348,104 +350,107 @@ export default function ProjectsPage() {
                                 <Table>
                                     <TableHeader className="bg-muted/50">
                                         <TableRow className="hover:bg-transparent border-border">
-                                            <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] px-8 h-12 w-[350px]">Nama Proyek</TableHead>
-                                            <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] px-6 h-12">Stream</TableHead>
-                                            <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] px-6 h-12">Tags</TableHead>
-                                            <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] px-6 h-12">Progress</TableHead>
-                                            <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] px-6 h-12 hidden sm:table-cell">Team</TableHead>
-                                            <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em] px-6 h-12 text-right">Tasks</TableHead>
-                                            <TableHead className="w-12 px-8"></TableHead>
+                                            <TableHead className="text-xs text-muted-foreground/60 uppercase tracking-[0.1em] px-4 h-12 w-[280px]">Project Name</TableHead>
+                                            <TableHead className="text-xs text-muted-foreground/60 uppercase tracking-[0.1em] px-3 h-12">Stream</TableHead>
+                                            <TableHead className="text-xs text-muted-foreground/60 uppercase tracking-[0.1em] px-3 h-12">Tags</TableHead>
+                                            <TableHead className="text-xs text-muted-foreground/60 uppercase tracking-[0.1em] px-3 h-12">Progress</TableHead>
+                                            <TableHead className="text-xs text-muted-foreground/60 uppercase tracking-[0.1em] px-3 h-12 hidden sm:table-cell">Team</TableHead>
+                                            <TableHead className="text-xs text-muted-foreground/60 uppercase tracking-[0.1em] px-3 h-12 text-right">Tasks</TableHead>
+                                            <TableHead className="w-12 px-4"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {paginatedProjects.map((proj) => {
                                             const pct = (proj as any).progress ?? 0;
-                                            const members = users.filter((u: any) => proj.members?.includes(u.id));
+                                            const members: Array<{ id: string; name: string; color: string }> =
+                                                (proj as any).memberDetails?.length
+                                                    ? (proj as any).memberDetails
+                                                    : users.filter((u: any) => proj.members?.includes(u.id));
                                             const stream = streams.find(s => s.id === proj.streamId);
                                             const projectTagsStrings = tags.filter(t => proj.tags?.includes(t.id));
 
                                             return (
                                                 <TableRow key={proj.id} className="group border-border hover:bg-muted/30 transition-all duration-200 cursor-default">
-                                                    <TableCell className="px-8 py-5">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0 border border-border transition-transform group-hover:scale-105" style={{ backgroundColor: `${proj.color}10` }}>
-                                                                <FolderOpen size={18} style={{ color: proj.color }} strokeWidth={2.5} />
+                                                    <TableCell className="px-4 py-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 border border-border transition-transform group-hover:scale-105" style={{ backgroundColor: `${proj.color}10` }}>
+                                                                <FolderOpen size={16} style={{ color: proj.color }} strokeWidth={2.5} />
                                                             </div>
                                                             <div className="flex flex-col min-w-0">
-                                                                <Link href={`/board/${proj.id}`} className="text-title-small font-medium text-foreground hover:text-primary transition-colors truncate">
+                                                                <Link href={`/board/${proj.id}`} className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors truncate">
                                                                     {proj.title}
                                                                 </Link>
-                                                                <span className="text-body-small text-muted-foreground/60 truncate max-w-[240px]">{proj.description || "Tanpa deskripsi"}</span>
+                                                                <span className="text-[11px] text-muted-foreground/70 truncate max-w-[200px]">{proj.description || "Tanpa deskripsi"}</span>
                                                             </div>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="px-6 py-5">
+                                                    <TableCell className="px-3 py-3">
                                                         {stream ? (
-                                                            <Badge variant="outline" className="rounded-lg bg-primary/10 text-primary border-primary/20 text-label-small font-medium px-2 py-0.5 whitespace-nowrap">
+                                                            <Badge variant="outline" className="rounded-md bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 whitespace-nowrap hidden lg:inline-flex">
                                                                 <Ship size={10} className="mr-1 inline-block" />
                                                                 {stream.name}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-label-small text-muted-foreground/40 italic">No Stream</span>
+                                                            <span className="text-[10px] text-muted-foreground/40 italic">No Stream</span>
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="px-6 py-5">
-                                                        <div className="flex flex-wrap gap-1 max-w-[180px]">
+                                                    <TableCell className="px-3 py-3">
+                                                        <div className="flex flex-wrap gap-1 max-w-[140px]">
                                                             {projectTagsStrings.map(t => (
-                                                                <Badge key={t.id} variant="outline" className="rounded-lg bg-muted text-muted-foreground border-transparent text-label-small font-medium px-2 py-0.5 whitespace-nowrap">
+                                                                <Badge key={t.id} variant="outline" className="rounded-md bg-muted text-muted-foreground border-transparent text-[10px] font-semibold px-1.5 py-0 whitespace-nowrap">
                                                                     {t.name}
                                                                 </Badge>
                                                             ))}
-                                                            {projectTagsStrings.length === 0 && <span className="text-label-small text-muted-foreground/40 italic">-</span>}
+                                                            {projectTagsStrings.length === 0 && <span className="text-[10px] text-muted-foreground/40 italic">-</span>}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="px-6 py-5">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="h-1.5 w-16 bg-muted/80 rounded-full overflow-hidden shrink-0">
-                                                                    <div className="h-full transition-all duration-500 rounded-full" style={{ width: `${pct}%`, backgroundColor: proj.color }} />
+                                                    <TableCell className="px-3 py-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-1.5 w-12 bg-muted/80 rounded-full overflow-hidden shrink-0">
+                                                                <div className="h-full transition-all duration-500 rounded-full" style={{ width: `${pct}%`, backgroundColor: proj.color }} />
                                                             </div>
-                                                            <span className="text-label-medium font-medium tabular-nums" style={{ color: proj.color }}>{pct}%</span>
+                                                            <span className="text-xs font-semibold tabular-nums" style={{ color: proj.color }}>{pct}%</span>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="px-6 py-5 hidden sm:table-cell">
-                                                        <div className="flex -space-x-2">
+                                                    <TableCell className="px-3 py-3 hidden sm:table-cell">
+                                                        <div className="flex -space-x-1.5">
                                                             {members.slice(0, 4).map((u: any) => (
                                                                 <Tooltip key={u.id} delayDuration={0}>
                                                                     <TooltipTrigger asChild>
-                                                                        <Avatar className="h-7 w-7 ring-2 ring-white shadow-sm hover:-translate-y-0.5 transition-transform shrink-0">
-                                                                            <AvatarFallback className="text-label-small text-primary-foreground font-medium" style={{ backgroundColor: u.color }}>{getInitials(u.name)}</AvatarFallback>
+                                                                        <Avatar className="h-6 w-6 ring-2 ring-white shadow-sm hover:-translate-y-0.5 transition-transform shrink-0">
+                                                                            <AvatarFallback className="text-[9px] text-primary-foreground font-semibold" style={{ backgroundColor: u.color }}>{getInitials(u.name)}</AvatarFallback>
                                                                         </Avatar>
                                                                     </TooltipTrigger>
-                                                                    <TooltipContent side="top" className="text-label-small font-medium p-1 px-2 mb-1">{u.name}</TooltipContent>
+                                                                    <TooltipContent side="top" className="text-xs font-semibold p-1 px-2 mb-1">{u.name}</TooltipContent>
                                                                 </Tooltip>
                                                             ))}
                                                             {members.length > 4 && (
-                                                                <Avatar className="h-7 w-7 ring-2 ring-white shadow-sm bg-muted/80 shrink-0">
-                                                                    <AvatarFallback className="text-[9px] font-black text-muted-foreground">+{members.length - 4}</AvatarFallback>
+                                                                <Avatar className="h-6 w-6 ring-2 ring-white shadow-sm bg-muted/80 shrink-0">
+                                                                    <AvatarFallback className="text-[8px] font-black text-muted-foreground">+{members.length - 4}</AvatarFallback>
                                                                 </Avatar>
                                                             )}
-                                                            {members.length === 0 && <span className="text-[10px] font-bold text-muted-foreground/60 italic">Empty</span>}
+                                                            {members.length === 0 && <span className="text-[9px] font-black text-muted-foreground/60 italic">Empty</span>}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="px-6 py-5 text-right">
+                                                    <TableCell className="px-3 py-3 text-right">
                                                         <div className="flex flex-col items-end">
-                                                            <span className="text-label-large font-medium text-foreground leading-none tabular-nums">{proj.completedCount}<span className="text-muted-foreground/40 mx-0.5">/</span>{proj.taskCount}</span>
-                                                            <span className="text-label-small text-muted-foreground/60 uppercase tracking-[0.05em] mt-1">Tugas</span>
+                                                            <span className="text-xs font-semibold text-foreground leading-none tabular-nums">{proj.completedCount}<span className="text-muted-foreground/40 mx-0.5">/</span>{proj.taskCount}</span>
+                                                            <span className="text-[9px] text-muted-foreground/70 uppercase tracking-[0.05em] mt-0.5">Tasks</span>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="px-8 py-5 text-right">
+                                                    <TableCell className="px-4 py-3 text-right">
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/80 hover:text-foreground hover:bg-muted/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/80 hover:text-foreground hover:bg-muted/80 rounded-lg transition-all">
                                                                     <MoreHorizontal size={14} />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end" className="rounded-xl border-border shadow-xl p-1.5 w-44">
                                                                 <DropdownMenuItem onClick={() => setEditProject(proj)} className="rounded-lg gap-3 text-sm font-bold text-foreground/80 focus:bg-muted px-3 py-2">
-                                                                    <Pencil size={15} className="text-primary" /> Edit Proyek
+                                                                    <Pencil size={15} className="text-primary" /> Edit Project
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem onClick={() => setDeleteProject(proj)} className="rounded-lg gap-3 text-sm font-bold text-destructive focus:bg-destructive/10 px-3 py-2">
-                                                                    <Trash2 size={15} /> Hapus Proyek
+                                                                    <Trash2 size={15} /> Delete Project
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
@@ -461,8 +466,8 @@ export default function ProjectsPage() {
                                                             <FolderOpen size={32} className="text-slate-200" />
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <p className="text-sm font-bold text-foreground">Tidak ada proyek ditemukan</p>
-                                                            <p className="text-xs font-normal text-muted-foreground/60">Coba ubah filter atau lakukan pencarian lain.</p>
+                                                            <p className="text-sm font-bold text-foreground">No projects found</p>
+                                                            <p className="text-xs font-normal text-muted-foreground/60">Try changing filters or your search query.</p>
                                                         </div>
                                                         <Button variant="outline" onClick={resetFilters} className="rounded-xl font-medium h-8 px-4 text-xs mt-2 border-border">Reset Search</Button>
                                                     </div>
@@ -478,24 +483,24 @@ export default function ProjectsPage() {
                                 <div className="flex items-center justify-between px-8 py-5 bg-muted/30 border-t border-border/60">
                                     <div className="flex items-center gap-2">
                                         <p className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">
-                                            Halaman <span className="text-foreground font-medium">{currentPage}</span> dari <span className="text-foreground font-medium">{totalPages}</span>
+                                            Page <span className="text-foreground font-medium">{currentPage}</span> of <span className="text-foreground font-medium">{totalPages}</span>
                                         </p>
                                     </div>
 
                                     <div className="flex items-center gap-1.5">
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={() => setCurrentPage(1)} 
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setCurrentPage(1)}
                                             disabled={currentPage === 1}
                                             className="h-8 w-8 rounded-lg border border-border/50 bg-card hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-40"
                                         >
                                             <ChevronsLeft size={14} />
                                         </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                             disabled={currentPage === 1}
                                             className="h-8 w-8 rounded-lg border border-border/50 bg-card hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-40"
                                         >
@@ -522,8 +527,8 @@ export default function ProjectsPage() {
                                                         onClick={() => setCurrentPage(page)}
                                                         className={cn(
                                                             "h-8 min-w-[32px] rounded-lg text-label-medium font-medium transition-all duration-200",
-                                                            currentPage === page 
-                                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105" 
+                                                            currentPage === page
+                                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105"
                                                                 : "bg-card border border-border/50 text-muted-foreground hover:text-foreground"
                                                         )}
                                                     >
@@ -533,19 +538,19 @@ export default function ProjectsPage() {
                                             })}
                                         </div>
 
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                             disabled={currentPage === totalPages}
                                             className="h-8 w-8 rounded-lg border border-border/50 bg-card hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-40"
                                         >
                                             <ChevronRight size={14} />
                                         </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={() => setCurrentPage(totalPages)} 
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setCurrentPage(totalPages)}
                                             disabled={currentPage === totalPages}
                                             className="h-8 w-8 rounded-lg border border-border/50 bg-card hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-40"
                                         >
@@ -559,33 +564,33 @@ export default function ProjectsPage() {
                 </div>
 
                 {/* Create dialog */}
-                <ProjectDialog 
-                    open={showCreate} 
-                    onOpenChange={setShowCreate} 
-                    onSave={handleCreate} 
-                    streams={streams} 
-                    tags={tags} 
+                <ProjectDialog
+                    open={showCreate}
+                    onOpenChange={setShowCreate}
+                    onSave={handleCreate}
+                    streams={streams}
+                    tags={tags}
                 />
 
                 {/* Edit dialog */}
                 {editProject && (
-                    <ProjectDialog 
-                        open={!!editProject} 
-                        onOpenChange={(o) => !o && setEditProject(null)} 
-                        project={editProject} 
-                        onSave={handleEdit} 
-                        streams={streams} 
-                        tags={tags} 
+                    <ProjectDialog
+                        open={!!editProject}
+                        onOpenChange={(o) => !o && setEditProject(null)}
+                        project={editProject}
+                        onSave={handleEdit}
+                        streams={streams}
+                        tags={tags}
                     />
                 )}
 
                 {/* Delete confirmation */}
                 {deleteProject && (
-                    <DeleteDialog 
-                        open={!!deleteProject} 
-                        onOpenChange={(o) => !o && setDeleteProject(null)} 
-                        projectTitle={deleteProject.title} 
-                        onConfirm={handleDelete} 
+                    <DeleteDialog
+                        open={!!deleteProject}
+                        onOpenChange={(o) => !o && setDeleteProject(null)}
+                        projectTitle={deleteProject.title}
+                        onConfirm={handleDelete}
                     />
                 )}
             </div>

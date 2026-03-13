@@ -73,7 +73,7 @@ export default function DashboardPage() {
     const { user } = useAuth();
     const router = useRouter();
     const [hasMounted, setHasMounted] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [currentTime, setCurrentTime] = useState(new Date(2024, 0, 1)); // Stable SSR date
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [productivity, setProductivity] = useState<{ chart: ProductivityDay[], stats: any }>({ chart: [], stats: null });
     const [timeline, setTimeline] = useState<TimelineTask[]>([]);
@@ -83,13 +83,16 @@ export default function DashboardPage() {
     const [selectedStream, setSelectedStream] = useState<string>("all");
     const [selectedPeriod, setSelectedPeriod] = useState<string>("weekly"); // weekly, monthly, yearly
     const [selectedTimelineStatus, setSelectedTimelineStatus] = useState<string>("all");
-    const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
+    const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date(2024, 0, 1)); // Stable SSR date
     const [scheduleFilter, setScheduleFilter] = useState<"all" | "meeting" | "task">("all");
     const [showGoal, setShowGoal] = useState<boolean>(true);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         setHasMounted(true);
+        const now = new Date();
+        setCurrentTime(now);
+        setSelectedCalendarDate(now);
         // Keep currentTime updated every minute
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
@@ -131,9 +134,10 @@ export default function DashboardPage() {
 
         async function init() {
             try {
-                const sRes = await fetch("/api/admin/streams");
+                const sRes = await fetch("/api/admin/streams?limit=100");
                 const sData = await sRes.json();
-                if (Array.isArray(sData)) setStreams(sData);
+                if (sData.data && Array.isArray(sData.data)) setStreams(sData.data);
+                else if (Array.isArray(sData)) setStreams(sData);
             } catch (e) { }
             fetchData(selectedStream, selectedPeriod);
         }
@@ -205,36 +209,37 @@ export default function DashboardPage() {
                         {/* Top KPI Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-9">
                             {[
-                                { title: "Total Work Hour", value: hasMounted ? (stats?.totalWorkHours ?? 0).toFixed(1) : "0.0", unit: "hours", sub: "Live data", icon: Clock },
-                                { title: "Tasks Completed", value: hasMounted ? (stats?.tasksCompleted ?? "0") : "0", unit: "task", sub: "Live data", icon: CheckCircle2 },
-                                { title: "Total Active Projects", value: hasMounted ? (stats?.activeProjects ?? "0") : "0", unit: "project", sub: "Live data", icon: Briefcase },
-                                { title: "Budget Utilization", value: hasMounted ? `${stats?.budgetUtilization ?? 0}%` : "0%", sub: "Calculated", icon: DollarSign },
+                                { title: "Total Work Hour", value: hasMounted ? (stats?.totalWorkHours ?? 0).toFixed(1) : "0.0", unit: "hours", sub: "Live data", icon: Clock, href: "/my-tasks" },
+                                { title: "Tasks Completed", value: hasMounted ? (stats?.tasksCompleted ?? "0") : "0", unit: "task", sub: "Live data", icon: CheckCircle2, href: "/my-tasks" },
+                                { title: "Total Active Projects", value: hasMounted ? (stats?.activeProjects ?? "0") : "0", unit: "project", sub: "Live data", icon: Briefcase, href: "/projects" },
                             ].map((card, i) => (
-                                <RoundedCard key={i} className="relative group hover:border-primary/20 transition-all cursor-default">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-label-large text-muted-foreground mb-1">{card.title}</span>
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-headline-small font-medium text-foreground">{card.value}</span>
-                                                {card.unit && <span className="text-label-medium text-muted-foreground/60">{card.unit}</span>}
+                                <Link href={card.href} key={i} className="block">
+                                    <RoundedCard className="relative group hover:border-primary/20 transition-all cursor-pointer h-full">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-label-large text-muted-foreground mb-1 min-h-[42px] block">{card.title}</span>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-headline-small font-medium text-foreground">{card.value}</span>
+                                                    {card.unit && <span className="text-label-medium text-muted-foreground/60">{card.unit}</span>}
+                                                </div>
+                                            </div>
+                                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground/80 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                <card.icon size={18} />
                                             </div>
                                         </div>
-                                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground/80 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                            <card.icon size={18} />
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground/80">
+                                            <span className="font-normal text-muted-foreground">{card.sub}</span>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground/80">
-                                        <span className="font-normal text-muted-foreground">{card.sub}</span>
-                                    </div>
-                                    {i === 0 && (
-                                        <div className="absolute right-6 bottom-6 w-12 h-6 flex items-end gap-0.5">
-                                            <div className="w-1.5 h-[40%] bg-primary/20 rounded-full" />
-                                            <div className="w-1.5 h-[60%] bg-primary/30 rounded-full" />
-                                            <div className="w-1.5 h-[100%] bg-primary rounded-full" />
-                                            <div className="w-1.5 h-[80%] bg-primary/40 rounded-full" />
-                                        </div>
-                                    )}
-                                </RoundedCard>
+                                        {i === 0 && (
+                                            <div className="absolute right-6 bottom-6 w-12 h-6 flex items-end gap-0.5">
+                                                <div className="w-1.5 h-[40%] bg-primary/20 rounded-full" />
+                                                <div className="w-1.5 h-[60%] bg-primary/30 rounded-full" />
+                                                <div className="w-1.5 h-[100%] bg-primary rounded-full" />
+                                                <div className="w-1.5 h-[80%] bg-primary/40 rounded-full" />
+                                            </div>
+                                        )}
+                                    </RoundedCard>
+                                </Link>
                             ))}
                         </div>
 
@@ -284,12 +289,31 @@ export default function DashboardPage() {
                             </RoundedCard>
 
                             {/* Daily Productivity Bar Chart */}
-                            <RoundedCard className="lg:col-span-8 overflow-hidden">
-                                <div className="flex items-center justify-between mb-8">
-                                    <h3 className="text-title-large text-foreground px-2">Daily Productivity</h3>
-                                    <div className="flex gap-2">
+                            <RoundedCard className="lg:col-span-8 overflow-hidden relative">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8 px-2">
+                                    <h3 className="text-title-large text-foreground whitespace-nowrap">Daily Productivity</h3>
+
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 flex-1 sm:justify-center">
+                                        {/* Reference Legend */}
+                                        <div className="flex flex-col gap-2.5 text-[11px] font-bold text-muted-foreground/80">
+                                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                                <div className="w-3 h-2 rounded-full bg-[#ef4444] shrink-0"></div>
+                                                Under Load (&lt; 6h)
+                                            </div>
+                                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                                <div className="w-3 h-2 rounded-full bg-[#eab308] shrink-0"></div>
+                                                Moderate (6-8h)
+                                            </div>
+                                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                                <div className="w-3 h-2 rounded-full bg-[#10b981] shrink-0"></div>
+                                                Over Load (&gt; 8h)
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 relative z-10 shrink-0">
                                         <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
-                                            <SelectTrigger className="w-[120px] h-9 border-0 bg-muted font-bold text-xs rounded-xl focus:ring-0 shadow-none">
+                                            <SelectTrigger className="w-[120px] h-10 border-0 bg-muted/50 hover:bg-muted font-bold text-xs rounded-xl focus:ring-0 shadow-none transition-colors">
                                                 <SelectValue placeholder="Period" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl border-border shadow-2xl">
@@ -300,7 +324,7 @@ export default function DashboardPage() {
                                         </Select>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-8 text-label-medium text-muted-foreground/60 hover:text-foreground">
+                                                <Button variant="ghost" className="h-10 px-3 text-label-medium text-muted-foreground/60 hover:text-foreground">
                                                     <Filter size={14} className="mr-2" /> Filter
                                                 </Button>
                                             </DropdownMenuTrigger>
@@ -334,9 +358,9 @@ export default function DashboardPage() {
                                                 {hasMounted && productivity?.stats ? (
                                                     <div className="space-y-3">
                                                         <div className="space-y-1.5">
-                                                            <div className="flex justify-between text-[11px] font-bold">
-                                                                <span className="text-muted-foreground">Overloaded ({'>'}90%)</span>
-                                                                <span className="text-orange-500">{productivity.stats.workloadBalance.overloaded} members</span>
+                                                            <div className="flex items-center justify-between text-[11px] font-bold">
+                                                                <span className="text-muted-foreground whitespace-nowrap">Overloaded ({'>'}90%)</span>
+                                                                <span className="text-orange-500 whitespace-nowrap ml-2">{productivity.stats.workloadBalance.overloaded} members</span>
                                                             </div>
                                                             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                                                                 <div
@@ -346,9 +370,9 @@ export default function DashboardPage() {
                                                             </div>
                                                         </div>
                                                         <div className="space-y-1.5">
-                                                            <div className="flex justify-between text-[11px] font-bold">
-                                                                <span className="text-muted-foreground">Underutilized ({'<'}70%)</span>
-                                                                <span className="text-blue-500">{productivity.stats.workloadBalance.underutilized} members</span>
+                                                            <div className="flex items-center justify-between text-[11px] font-bold">
+                                                                <span className="text-muted-foreground whitespace-nowrap">Underutilized ({'<'}70%)</span>
+                                                                <span className="text-blue-500 whitespace-nowrap ml-2">{productivity.stats.workloadBalance.underutilized} members</span>
                                                             </div>
                                                             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                                                                 <div
@@ -367,41 +391,68 @@ export default function DashboardPage() {
 
                                     {/* Chart & Stats Area */}
                                     <div className="md:col-span-8 flex flex-col gap-6">
-                                        <div className="relative h-[220px] flex items-end justify-between px-4 pb-12 border-l border-border pl-16">
-                                            {/* Target Goal Line */}
-                                            {showGoal && (
-                                                <div className="absolute left-16 right-4 border-t border-dashed border-primary/40 z-0 bottom-[80px]" title="Target Goal: 80%">
-                                                    <span className="absolute -top-4 right-0 text-label-small text-primary/60 uppercase tracking-[0.08em]">Target 80%</span>
-                                                </div>
-                                            )}
-                                            <div className="absolute left-6 top-0 bottom-12 flex flex-col justify-between text-label-small text-muted-foreground/40 pointer-events-none uppercase tracking-tighter py-1">
-                                                <span>Max</span>
-                                                <span className="opacity-50">50%</span>
-                                                <span>0</span>
+                                        <div className="relative h-[250px] flex items-end px-4 mt-6">
+                                            {/* Y-axis labels */}
+                                            <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-[10px] font-bold text-muted-foreground/40 text-right pr-2 w-8">
+                                                <span className="-mt-1.5">12</span>
+                                                <span className="mb-0">0</span>
                                             </div>
-                                            {hasMounted && productivity?.chart?.length > 0 ? (
-                                                productivity.chart.map((day, i) => (
-                                                    <div key={i} className="flex flex-col items-center gap-3 flex-1">
-                                                        <div className="w-7 bg-muted rounded-full relative group cursor-pointer h-[140px] flex items-end overflow-hidden shadow-inner" title={`${day.day}: ${day.hours}h`}>
-                                                            <div
-                                                                className={cn(
-                                                                    "w-full rounded-full transition-all duration-700 delay-[200ms]",
-                                                                    day.hours > 6 ? "bg-primary" : "bg-primary"
-                                                                )}
-                                                                style={{ height: `${day.percentage}%` }}
-                                                            />
-                                                            <div className="absolute opacity-0 group-hover:opacity-100 -top-1 bg-secondary/90 text-primary-foreground text-label-small px-2 py-1 rounded shadow-xl transition-all z-10 -translate-y-full left-1/2 -translate-x-1/2 whitespace-nowrap">
-                                                                {day.hours}h ({day.utilization}%)
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-label-small text-muted-foreground/50 w-full text-center uppercase tracking-tighter">{day.day}</span>
+
+                                            {/* Threshold Lines */}
+                                            {showGoal && (
+                                                <>
+                                                    <div className="absolute left-8 right-0 top-[33.3%] border-t border-dashed border-yellow-400/60 z-0">
+                                                        <span className="absolute -left-6 -top-[6px] text-[10px] font-bold text-muted-foreground/60 w-4 text-right">8h</span>
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <div className="flex-1 h-full flex items-center justify-center text-muted-foreground/60 font-medium italic text-xs">
-                                                    {hasMounted ? "No productivity data available for this week." : "..."}
-                                                </div>
+                                                    <div className="absolute left-8 right-0 top-[50%] border-t border-dashed border-red-400/60 z-0">
+                                                        <span className="absolute -left-6 -top-[6px] text-[10px] font-bold text-muted-foreground/60 w-4 text-right">6h</span>
+                                                    </div>
+                                                </>
                                             )}
+
+                                            {/* Base border line for 0 */}
+                                            <div className="absolute left-8 right-0 bottom-8 border-t border-border z-0"></div>
+
+                                            {/* The Bars Wrapper */}
+                                            <div className="flex-1 flex justify-between h-full relative z-10 pl-6 pb-8">
+                                                {hasMounted && productivity?.chart?.length > 0 ? (
+                                                    productivity.chart.map((day, i) => {
+                                                        let barColor = "bg-[#10b981]"; // Green (Over load)
+                                                        if (day.hours < 6) barColor = "bg-[#ef4444]"; // Red
+                                                        else if (day.hours <= 8) barColor = "bg-[#eab308]"; // Yellow
+
+                                                        // Ensure the height makes sense visually. Cap visually to 100% and map minimum height to pill.
+                                                        const heightPct = Math.min((day.hours / 12) * 100, 100);
+                                                        const displayHeight = Math.max(heightPct, 15); // min 15% height for pill visibility
+
+                                                        return (
+                                                            <div key={i} className="flex flex-col items-center justify-end flex-1 h-full z-10 relative group">
+                                                                <div className="w-5 md:w-7 bg-transparent relative flex items-end justify-center h-full group-hover:-translate-y-1 transition-transform cursor-pointer">
+                                                                    <div
+                                                                        className={cn(
+                                                                            "w-full rounded-full transition-all duration-700 shadow-md flex items-start justify-center pt-[5px]",
+                                                                            barColor
+                                                                        )}
+                                                                        style={{ height: `${displayHeight}%` }}
+                                                                    >
+                                                                        <span className="text-[9px] sm:text-[10px] font-bold text-white drop-shadow-md leading-none select-none tracking-tight">
+                                                                            {day.hours > 99 ? '99+' : day.hours}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="absolute opacity-0 group-hover:opacity-100 -top-10 bg-[#334155] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl transition-all z-20 pointer-events-none whitespace-nowrap">
+                                                                        {day.hours}h ({day.utilization}%)
+                                                                    </div>
+                                                                </div>
+                                                                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter absolute -bottom-6 w-full text-center flex justify-center">{day.day}</span>
+                                                            </div>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <div className="flex-1 h-full flex items-center justify-center text-muted-foreground/60 font-medium italic text-xs mb-8">
+                                                        {hasMounted ? "No productivity data available for this week." : "..."}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

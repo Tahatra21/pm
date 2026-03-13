@@ -1,6 +1,4 @@
 import { db } from "@/lib/db";
-import { tasks } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
@@ -12,16 +10,17 @@ export async function GET(request: Request) {
         const assigneeId = searchParams.get("assigneeId");
         const status = searchParams.get("status");
 
-        let query = db.select().from(tasks);
-
-        let results = await query;
-
-        if (projectId) results = results.filter((t) => t.projectId === projectId);
-        if (assigneeId) results = results.filter((t) => t.assigneeId === assigneeId);
-        if (status) results = results.filter((t) => t.status === status);
+        const results = await db.tbl_tasks.findMany({
+            where: {
+                ...(projectId && { projectId }),
+                ...(assigneeId && { assigneeId }),
+                ...(status && { status }),
+            }
+        });
 
         return NextResponse.json(results);
     } catch (error) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
     }
 }
@@ -35,24 +34,27 @@ export async function POST(request: Request) {
         if (!projectId || !title) return NextResponse.json({ error: "projectId and title are required" }, { status: 400 });
 
         const id = randomUUID();
-        await db.insert(tasks).values({
-            id, projectId, title,
-            description: description || "",
-            status: taskStatus || "todo",
-            priority: priority || "medium",
-            assigneeId: assigneeId || null,
-            dueDate: dueDate ? new Date(dueDate) : null,
-            startDate: startDate ? new Date(startDate) : null,
-            tags: tags ? JSON.stringify(tags) : null,
-            gitLink: gitLink || null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+        const created = await db.tbl_tasks.create({
+            data: {
+                id,
+                projectId,
+                title,
+                description: description || "",
+                status: taskStatus || "todo",
+                priority: priority || "medium",
+                assigneeId: assigneeId || null,
+                dueDate: dueDate ? new Date(dueDate) : null,
+                startDate: startDate ? new Date(startDate) : null,
+                tags: tags ? JSON.stringify(tags) : null,
+                gitLink: gitLink || null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            }
         });
 
-        const createdResult = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
-        const created = createdResult[0];
         return NextResponse.json(created, { status: 201 });
     } catch (error) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
     }
 }

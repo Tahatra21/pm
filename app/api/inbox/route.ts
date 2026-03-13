@@ -1,57 +1,73 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { inboxMessages, users } from "@/lib/db/schema";
-import { eq, or, and } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId") || "u1"; 
+    const userId = searchParams.get("userId") || "u1";
     const contactId = searchParams.get("contactId");
 
     try {
         if (contactId) {
             // Fetch history between two users
-            const messages = await db.select({
-                id: inboxMessages.id,
-                subject: inboxMessages.subject,
-                message: inboxMessages.message,
-                status: inboxMessages.status,
-                createdAt: inboxMessages.createdAt,
-                senderId: inboxMessages.senderId,
-                senderName: users.name,
-                senderAvatar: users.avatar,
-            })
-            .from(inboxMessages)
-            .leftJoin(users, eq(inboxMessages.senderId, users.id))
-            .where(
-                or(
-                    and(eq(inboxMessages.senderId, userId), eq(inboxMessages.receiverId, contactId)),
-                    and(eq(inboxMessages.senderId, contactId), eq(inboxMessages.receiverId, userId))
-                )
-            )
-            .orderBy(inboxMessages.createdAt);
+            const results = await db.tbl_inbox_messages.findMany({
+                where: {
+                    OR: [
+                        { senderId: userId, receiverId: contactId },
+                        { senderId: contactId, receiverId: userId }
+                    ]
+                },
+                include: {
+                    users_inbox_messages_sender_idTousers: {
+                        select: {
+                            name: true,
+                            avatar: true
+                        }
+                    }
+                },
+                orderBy: { createdAt: "asc" }
+            });
 
-            return NextResponse.json(messages);
+            const formattedMessages = results.map(m => ({
+                id: m.id,
+                subject: m.subject,
+                message: m.message,
+                status: m.status,
+                createdAt: m.createdAt,
+                senderId: m.senderId,
+                senderName: m.users_inbox_messages_sender_idTousers?.name || "Unknown",
+                senderAvatar: m.users_inbox_messages_sender_idTousers?.avatar || "",
+            }));
+
+            return NextResponse.json(formattedMessages);
         }
 
         // Default: Fetch all received messages (inbox list)
-        const messages = await db.select({
-            id: inboxMessages.id,
-            subject: inboxMessages.subject,
-            message: inboxMessages.message,
-            status: inboxMessages.status,
-            createdAt: inboxMessages.createdAt,
-            senderId: inboxMessages.senderId,
-            senderName: users.name,
-            senderAvatar: users.avatar,
-        })
-        .from(inboxMessages)
-        .leftJoin(users, eq(inboxMessages.senderId, users.id))
-        .where(eq(inboxMessages.receiverId, userId))
-        .orderBy(inboxMessages.createdAt);
+        const results = await db.tbl_inbox_messages.findMany({
+            where: { receiverId: userId },
+            include: {
+                users_inbox_messages_sender_idTousers: {
+                    select: {
+                        name: true,
+                        avatar: true
+                    }
+                }
+            },
+            orderBy: { createdAt: "desc" }
+        });
 
-        return NextResponse.json(messages);
+        const formattedMessages = results.map(m => ({
+            id: m.id,
+            subject: m.subject,
+            message: m.message,
+            status: m.status,
+            createdAt: m.createdAt,
+            senderId: m.senderId,
+            senderName: m.users_inbox_messages_sender_idTousers?.name || "Unknown",
+            senderAvatar: m.users_inbox_messages_sender_idTousers?.avatar || "",
+        }));
+
+        return NextResponse.json(formattedMessages);
     } catch (error) {
         console.error("Inbox GET Error:", error);
         return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
@@ -67,17 +83,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        const newMessage = await db.insert(inboxMessages).values({
-            id: randomUUID(),
-            senderId,
-            receiverId,
-            subject,
-            message,
-            status: "unread",
-            createdAt: new Date(),
-        }).returning();
+        const newMessage = await db.tbl_inbox_messages.create({
+            data: {
+                id: randomUUID(),
+                senderId,
+                receiverId,
+                subject,
+                message,
+                status: "unread",
+                createdAt: new Date(),
+            }
+        });
 
-        return NextResponse.json(newMessage[0]);
+        return NextResponse.json(newMessage);
     } catch (error) {
         console.error("Inbox POST Error:", error);
         return NextResponse.json({ error: "Failed to create message" }, { status: 500 });
@@ -93,12 +111,12 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        const updated = await db.update(inboxMessages)
-            .set({ status })
-            .where(eq(inboxMessages.id, id))
-            .returning();
+        const updated = await db.tbl_inbox_messages.update({
+            where: { id },
+            data: { status }
+        });
 
-        return NextResponse.json(updated[0]);
+        return NextResponse.json(updated);
     } catch (error) {
         console.error("Inbox PATCH Error:", error);
         return NextResponse.json({ error: "Failed to update message" }, { status: 500 });
@@ -114,7 +132,9 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ error: "Message ID is required" }, { status: 400 });
         }
 
-        await db.delete(inboxMessages).where(eq(inboxMessages.id, id));
+        await db.tbl_inbox_messages.delete({
+            where: { id }
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {

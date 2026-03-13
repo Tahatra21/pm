@@ -1,79 +1,311 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model integrations {
+model tbl_integrations {
   id        String  @id
-  task_id   String
+  taskId   String @map("task_id")
   platform  String
   link      String
-  pr_status String? @default("open")
-  tasks     tasks   @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "integrations_task_id_tasks_id_fk")
+  prStatus String? @map("pr_status") @default("open")
+  tasks     tbl_tasks   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "integrations_task_id_tasks_id_fk")
+  @@map("tbl_integrations")
 }
 
-model project_members {
+model tbl_project_members {
   id         String   @id
-  project_id String
-  user_id    String
-  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_members_project_id_projects_id_fk")
-  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_members_user_id_users_id_fk")
+  projectId String @map("project_id")
+  userId    String @map("user_id")
+  projects   tbl_projects @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_members_project_id_projects_id_fk")
+  users      tbl_users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_members_user_id_users_id_fk")
+  @@map("tbl_project_members")
 }
 
-model projects {
-  id              String            @id
-  title           String
-  description     String?           @default("")
-  color           String?           @default("#6366f1")
-  created_at      DateTime          @default(now()) @db.Timestamp(6)
-  updated_at      DateTime          @default(now()) @db.Timestamp(6)
-  project_members project_members[]
-  tasks           tasks[]
+model tbl_projects {
+  id                    String                  @id
+  title                 String
+  description           String?                 @default("")
+  color                 String?                 @default("#6366f1")
+  streamId             String? @map("stream_id")
+  createdAt            DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt            DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+  contacts              tbl_contacts[]
+  users                 tbl_users[]
+  meetings              tbl_meetings[]
+  project_members       tbl_project_members[]
+  project_tag_relations tbl_project_tag_relations[]
+  streams               tbl_streams?                @relation(fields: [streamId], references: [id], onUpdate: NoAction, map: "projects_stream_id_streams_id_fk")
+  schedules             tbl_schedules[]
+  tasks                 tbl_tasks[]
+  @@map("tbl_projects")
 }
 
-model sessions {
+model tbl_sessions {
   id         String   @id
-  user_id    String
+  userId    String @map("user_id")
   token      String   @unique(map: "sessions_token_unique")
-  expires_at DateTime @db.Timestamp(6)
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sessions_user_id_users_id_fk")
+  expiresAt DateTime @db.Timestamp(6) @map("expires_at")
+  createdAt DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  users      tbl_users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sessions_user_id_users_id_fk")
+  @@map("tbl_sessions")
 }
 
-model tasks {
+model tbl_tasks {
   id           String         @id
-  project_id   String
+  projectId   String @map("project_id")
   title        String
   description  String?        @default("")
   status       String         @default("todo")
   priority     String         @default("medium")
-  assignee_id  String?
-  due_date     DateTime?      @db.Timestamp(6)
-  start_date   DateTime?      @db.Timestamp(6)
+  assigneeId  String? @map("assignee_id")
+  dueDate     DateTime? @map("due_date")      @db.Timestamp(6)
+  startDate   DateTime? @map("start_date")      @db.Timestamp(6)
   tags         String?
-  git_link     String?
-  created_at   DateTime       @default(now()) @db.Timestamp(6)
-  updated_at   DateTime       @default(now()) @db.Timestamp(6)
-  integrations integrations[]
-  users        users?         @relation(fields: [assignee_id], references: [id], onUpdate: NoAction, map: "tasks_assignee_id_users_id_fk")
-  projects     projects       @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tasks_project_id_projects_id_fk")
+  gitLink     String? @map("git_link")
+  createdAt   DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt   DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+  comments     tbl_comments[]
+  integrations tbl_integrations[]
+  subtasks     tbl_subtasks[]
+  users        tbl_users?         @relation(fields: [assigneeId], references: [id], onUpdate: NoAction, map: "tasks_assignee_id_users_id_fk")
+  projects     tbl_projects       @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tasks_project_id_projects_id_fk")
+  time_logs    tbl_time_logs[]
+  @@map("tbl_tasks")
 }
 
-model users {
-  id              String            @id
-  name            String
-  email           String            @unique(map: "users_email_unique")
-  password_hash   String
-  role            String            @default("member")
-  avatar          String?           @default("")
-  color           String?           @default("#6366f1")
-  created_at      DateTime          @default(now()) @db.Timestamp(6)
-  updated_at      DateTime          @default(now()) @db.Timestamp(6)
-  project_members project_members[]
-  sessions        sessions[]
-  tasks           tasks[]
+model tbl_users {
+  id                                               String            @id
+  name                                             String
+  email                                            String            @unique(map: "users_email_unique")
+  passwordHash                                    String @map("password_hash")
+  role                                             String            @default("member")
+  avatar                                           String?           @default("")
+  color                                            String?           @default("#6366f1")
+  phone                                            String?
+  status                                           String            @default("active")
+  projectId                                       String?           @map("project_id")
+  roleId                                          Int?              @map("role_id")
+  organizationUnit                                String?           @map("organization_unit")
+  createdAt                                       DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt                                       DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+  
+  role_ref                                       tbl_lookup_roles? @relation(fields: [roleId], references: [id], onUpdate: NoAction, map: "users_role_id_lookup_roles_id_fk")
+  projects                                        tbl_projects?     @relation(fields: [projectId], references: [id], onUpdate: NoAction, map: "users_project_id_projects_id_fk")
+  
+  comments                                         tbl_comments[]
+  inbox_messages_inbox_messages_receiver_idTousers tbl_inbox_messages[]  @relation("inbox_messages_receiver_idTousers")
+  inbox_messages_inbox_messages_sender_idTousers   tbl_inbox_messages[]  @relation("inbox_messages_sender_idTousers")
+  project_members                                  tbl_project_members[]
+  user_streams                                     tbl_user_streams[]
+  schedules                                        tbl_schedules[]
+  sessions                                         tbl_sessions[]
+  tasks                                            tbl_tasks[]
+  time_logs                                        tbl_time_logs[]
+  audit_logs                                       tbl_audit_logs[]
+  productivity_daily                               tbl_productivity_daily[]
+  @@map("tbl_users")
+}
+
+model tbl_lookup_roles {
+  id              Int      @id @default(autoincrement())
+  roleCode        String   @unique @map("role_code")
+  roleName        String   @map("role_name")
+  hierarchyLevel  String   @map("hierarchy_level") // L1, L2, L3, L4
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt       DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+  role_permissions tbl_role_permissions[]
+  users           tbl_users[]
+  @@map("tbl_lookup_roles")
+}
+
+model tbl_permissions {
+  id             Int      @id @default(autoincrement())
+  permissionCode String   @unique @map("permission_code")
+  permissionName String   @map("permission_name")
+  role_permissions tbl_role_permissions[]
+  @@map("tbl_permissions")
+}
+
+model tbl_role_permissions {
+  id            Int             @id @default(autoincrement())
+  roleId        Int             @map("role_id")
+  permissionId  Int             @map("permission_id")
+  isAllowed     Boolean         @default(true) @map("is_allowed")
+  roles         tbl_lookup_roles @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissions   tbl_permissions  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  @@map("tbl_role_permissions")
+}
+
+model tbl_comments {
+  id         String   @id
+  taskId    String @map("task_id")
+  userId    String @map("user_id")
+  content    String
+  type       String   @default("comment")
+  createdAt DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  tasks      tbl_tasks    @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_task_id_tasks_id_fk")
+  users      tbl_users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_user_id_users_id_fk")
+  @@map("tbl_comments")
+}
+
+model tbl_contacts {
+  id         String    @id
+  name       String
+  company    String?
+  email      String?
+  phone      String?
+  projectId String? @map("project_id")
+  notes      String?
+  createdAt DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  projects   tbl_projects? @relation(fields: [projectId], references: [id], onUpdate: NoAction, map: "contacts_project_id_projects_id_fk")
+  @@map("tbl_contacts")
+}
+
+model tbl_user_streams {
+  id          String       @id
+  userId     String      @map("user_id")
+  streamId   String      @map("stream_id")
+  createdAt  DateTime    @default(now()) @db.Timestamp(6) @map("created_at")
+  users       tbl_users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_streams_user_id_users_id_fk")
+  streams     tbl_streams   @relation(fields: [streamId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_streams_stream_id_streams_id_fk")
+  @@map("tbl_user_streams")
+}
+
+model tbl_inbox_messages {
+  id                                      String   @id
+  senderId                               String @map("sender_id")
+  receiverId                             String @map("receiver_id")
+  subject                                 String
+  message                                 String
+  status                                  String   @default("unread")
+  createdAt                              DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  users_inbox_messages_receiver_idTousers tbl_users    @relation("inbox_messages_receiver_idTousers", fields: [receiverId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "inbox_messages_receiver_id_users_id_fk")
+  users_inbox_messages_sender_idTousers   tbl_users    @relation("inbox_messages_sender_idTousers", fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "inbox_messages_sender_id_users_id_fk")
+  @@map("tbl_inbox_messages")
+}
+
+model tbl_meetings {
+  id          String    @id
+  title       String
+  description String?   @default("")
+  projectId  String? @map("project_id")
+  startTime  DateTime @db.Timestamp(6) @map("start_time")
+  endTime    DateTime @db.Timestamp(6) @map("end_time")
+  location    String?   @default("")
+  attendees   String?
+  createdAt  DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  projects    tbl_projects? @relation(fields: [projectId], references: [id], onUpdate: NoAction, map: "meetings_project_id_projects_id_fk")
+  @@map("tbl_meetings")
+}
+
+model tbl_productivity_daily {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  date             DateTime @db.Timestamp(6)
+  totalHours       String   @map("total_hours")
+  utilizationRate String   @map("utilization_rate")
+  createdAt        DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+
+  users            tbl_users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date], map: "productivity_daily_user_date_unique")
+  @@map("tbl_productivity_daily")
+}
+
+model tbl_project_tag_relations {
+  id           String       @id
+  projectId   String @map("project_id")
+  tagId       String @map("tag_id")
+  createdAt   DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  projects     tbl_projects     @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_tag_relations_project_id_projects_id_fk")
+  projectTags tbl_project_tags @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_tag_relations_tag_id_project_tags_id_fk")
+  @@map("tbl_project_tag_relations")
+}
+
+model tbl_project_tags {
+  id                    String                  @id
+  code                  String                  @unique(map: "project_tags_code_unique")
+  name                  String
+  category              String?                 @default("general")
+  isActive             String @default("true") @map("is_active")
+  sortOrder            String? @map("sort_order")                 @default("0")
+  createdAt            DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt            DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+  project_tag_relations tbl_project_tag_relations[]
+  @@map("tbl_project_tags")
+}
+
+model tbl_schedules {
+  id          String    @id
+  projectId  String? @map("project_id")
+  title       String
+  startTime  DateTime @db.Timestamp(6) @map("start_time")
+  endTime    DateTime @db.Timestamp(6) @map("end_time")
+  assignedTo String? @map("assigned_to")
+  createdAt  DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  users       tbl_users?    @relation(fields: [assignedTo], references: [id], onUpdate: NoAction, map: "schedules_assigned_to_users_id_fk")
+  projects    tbl_projects? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "schedules_project_id_projects_id_fk")
+  @@map("tbl_schedules")
+}
+
+model tbl_streams {
+  id          String     @id
+  code        String     @unique(map: "streams_code_unique")
+  name        String
+  description String?
+  isActive   String @default("true") @map("is_active")
+  sortOrder  String? @map("sort_order")    @default("0")
+  createdAt  DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt  DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+  projects    tbl_projects[]
+  user_streams tbl_user_streams[]
+  @@map("tbl_streams")
+}
+
+model tbl_subtasks {
+  id         String   @id
+  taskId    String @map("task_id")
+  title      String
+  completed  String   @default("false")
+  sortOrder String? @map("sort_order")  @default("0")
+  createdAt DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  tasks      tbl_tasks    @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subtasks_task_id_tasks_id_fk")
+  @@map("tbl_subtasks")
+}
+
+model tbl_time_logs {
+  id          String   @id
+  taskId     String? @map("task_id")
+  userId     String @map("user_id")
+  hours       String
+  date        DateTime @default(now()) @db.Timestamp(6)
+  description String?  @default("")
+  createdAt  DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  tasks       tbl_tasks?   @relation(fields: [taskId], references: [id], onUpdate: NoAction, map: "time_logs_task_id_tasks_id_fk")
+  users       tbl_users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "time_logs_user_id_users_id_fk")
+  @@map("tbl_time_logs")
+}
+
+model tbl_audit_logs {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  resource  String?
+  details   String?
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  users     tbl_users? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@map("tbl_audit_logs")
+}
+
+model tbl_system_settings {
+  id        String   @id @default("global")
+  data      Json
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(6) @map("updated_at")
+  @@map("tbl_system_settings")
 }

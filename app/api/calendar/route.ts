@@ -1,6 +1,4 @@
 import { db } from "@/lib/db";
-import { tasks, projects } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 // GET /api/calendar?userId=xxx — iCal export for task deadlines
@@ -9,11 +7,15 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get("userId");
 
-        let allTasks = await db.select().from(tasks);
-        if (userId) allTasks = allTasks.filter((t) => t.assigneeId === userId);
-
-        // Filter tasks with due dates
-        const tasksWithDates = allTasks.filter((t) => t.dueDate);
+        const allTasks = await db.tbl_tasks.findMany({
+            where: {
+                ...(userId && { assigneeId: userId }),
+                dueDate: { not: null }
+            },
+            include: {
+                projects: true
+            }
+        });
 
         // Build iCal
         const lines: string[] = [
@@ -25,9 +27,8 @@ export async function GET(request: Request) {
             "X-WR-CALNAME:ProjectFlow Tasks",
         ];
 
-        for (const task of tasksWithDates) {
-            const projResult = await db.select().from(projects).where(eq(projects.id, task.projectId)).limit(1);
-            const project = projResult[0];
+        for (const task of allTasks) {
+            const project = task.projects;
             const dueDate = new Date(task.dueDate!);
             const dtStamp = formatICalDate(new Date());
             const dtStart = formatICalDate(dueDate);
@@ -56,6 +57,7 @@ export async function GET(request: Request) {
             },
         });
     } catch (error) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to generate calendar" }, { status: 500 });
     }
 }

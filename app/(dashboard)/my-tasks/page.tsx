@@ -3,14 +3,15 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/lib/auth-context";
-import { formatDate, isOverdue } from "@/lib/utils";
-import { Calendar, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import { Calendar, Clock, CheckCircle2, AlertTriangle, ListFilter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import TaskListView from "@/components/board/task-list-view";
+import { Task, Project, User } from "@/lib/types";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
     todo: { label: "To Do", variant: "outline" },
@@ -23,13 +24,27 @@ const PRIORITY_COLOR: Record<string, string> = { low: "#6b7280", medium: "#eab30
 export default function MyTasksPage() {
     const { user } = useAuth();
     const [filter, setFilter] = useState("all");
-    const [selectedTask, setSelectedTask] = useState<any>(null);
-    const [allTasks, setAllTasks] = useState<any[]>([]);
-    const [projects, setProjects] = useState<any[]>([]);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [allTasks, setAllTasks] = useState<Task[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
 
     useEffect(() => {
-        fetch("/api/tasks").then(r => r.json()).then(data => { if (Array.isArray(data)) setAllTasks(data); }).catch(() => {});
-        fetch("/api/projects").then(r => r.json()).then(data => { if (Array.isArray(data)) setProjects(data); }).catch(() => {});
+        const fetchData = async () => {
+            try {
+                const [tRes, pRes, uRes] = await Promise.all([
+                    fetch("/api/tasks"),
+                    fetch("/api/projects"),
+                    fetch("/api/users")
+                ]);
+                if (tRes.ok) setAllTasks(await tRes.json());
+                if (pRes.ok) setProjects(await pRes.json());
+                if (uRes.ok) setUsers(await uRes.json());
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            }
+        };
+        fetchData();
     }, []);
 
     const myTasks = allTasks.filter((t) => t.assigneeId === user?.id);
@@ -44,8 +59,8 @@ export default function MyTasksPage() {
 
     const stats = [
         { label: "Total", value: myTasks.length, icon: Clock, color: "text-primary" },
-        { label: "Dikerjakan", value: pending.length, icon: AlertTriangle, color: "text-chart-4" },
-        { label: "Selesai", value: done.length, icon: CheckCircle2, color: "text-chart-5" },
+        { label: "In Progress", value: pending.length, icon: AlertTriangle, color: "text-chart-4" },
+        { label: "Completed", value: done.length, icon: CheckCircle2, color: "text-chart-5" },
     ];
 
     const handleMarkDone = async (taskId: string) => {
@@ -63,7 +78,7 @@ export default function MyTasksPage() {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <Header breadcrumb={[{ label: "Dashboard", href: "/" }, { label: "Tugas Saya" }]} />
+            <Header breadcrumb={[{ label: "Dashboard", href: "/" }, { label: "My Tasks" }]} />
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Stats */}
                 <div className="grid gap-6 md:grid-cols-3">
@@ -81,84 +96,32 @@ export default function MyTasksPage() {
                 </div>
 
                 {/* Tasks table */}
-                <Card className="border-0 shadow-sm rounded-2xl bg-card overflow-hidden">
-                    <CardHeader className="pb-4 pt-6 px-6 flex-row items-center justify-between">
-                        <CardTitle className="text-title-medium text-foreground">Semua Tugas Saya</CardTitle>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <ListFilter size={18} className="text-muted-foreground" />
+                            <h2 className="text-title-medium font-semibold text-foreground">My Task List</h2>
+                        </div>
                         <Select value={filter} onValueChange={setFilter}>
-                            <SelectTrigger className="w-[140px] h-9 text-label-medium font-medium rounded-xl border-border bg-muted/50">
-                                <SelectValue placeholder="Semua Tugas" />
+                            <SelectTrigger className="w-[160px] h-9 text-label-medium font-medium rounded-xl border-border bg-card shadow-sm">
+                                <SelectValue placeholder="All Tasks" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">Semua Tugas</SelectItem>
-                                <SelectItem value="incomplete">Incomplete</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="all">Total Tasks</SelectItem>
+                                <SelectItem value="incomplete">Active Tasks</SelectItem>
+                                <SelectItem value="completed">Completed Tasks</SelectItem>
                             </SelectContent>
                         </Select>
-                    </CardHeader>
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-muted/30 border-border">
-                                <TableHead className="w-1"></TableHead>
-                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Tugas</TableHead>
-                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Proyek</TableHead>
-                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Status</TableHead>
-                                <TableHead className="text-label-medium text-muted-foreground/60 uppercase tracking-[0.1em]">Tenggat</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {displayTasks.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="py-12 text-center">
-                                        <CheckCircle2 className="mx-auto mb-2 text-muted-foreground" size={28} />
-                                        <p className="text-sm text-muted-foreground">Tidak ada tugas yang sesuai</p>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                displayTasks.map((task) => {
-                                    const project = projects.find((p: any) => p.id === task.projectId);
-                                    const overdue = task.dueDate && isOverdue(task.dueDate) && task.status !== "done";
-                                    return (
-                                        <TableRow key={task.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedTask(task)}>
-                                            <TableCell className="w-1 pr-0">
-                                                <div className="w-1 h-6 rounded-full" style={{ backgroundColor: PRIORITY_COLOR[task.priority] }} />
-                                            </TableCell>
-                                            <TableCell>
-                                                <p className={`text-body-medium font-medium ${task.status === "done" ? "line-through text-muted-foreground/60 font-normal" : "text-foreground"}`}>{task.title}</p>
-                                                {task.tags && task.tags.length > 0 && (
-                                                    <div className="flex gap-1 mt-1">
-                                                        {(typeof task.tags === "string" ? JSON.parse(task.tags) : task.tags).slice(0, 2).map((tag: string) => (
-                                                            <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0 h-4 font-normal">#{tag}</Badge>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {project && (
-                                                    <div className="flex items-center gap-1.5 text-body-small text-muted-foreground/60">
-                                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: project.color }} />
-                                                        {project.title}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={STATUS_MAP[task.status]?.variant || "outline"} className="text-label-small font-medium rounded-lg px-2 shadow-none border-transparent bg-muted/50 text-muted-foreground">
-                                                    {STATUS_MAP[task.status]?.label}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {task.dueDate && (
-                                                    <span className={`flex items-center gap-1 text-label-small ${overdue ? "text-destructive font-medium" : "text-muted-foreground/40"}`}>
-                                                        <Calendar size={11} className="opacity-60" /> {formatDate(task.dueDate)}
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })
-                            )}
-                        </TableBody>
-                    </Table>
-                </Card>
+                    </div>
+                    
+                    <TaskListView 
+                        tasks={displayTasks}
+                        users={users}
+                        projects={projects}
+                        showProject={true}
+                        onTaskClick={setSelectedTask}
+                    />
+                </div>
             </div>
 
             {/* Task Detail Sheet */}
@@ -166,14 +129,14 @@ export default function MyTasksPage() {
                 <SheetContent className="w-[400px] sm:w-[500px]">
                     <SheetHeader className="p-6 border-b border-border bg-muted/30">
                         <SheetTitle className="text-title-large text-foreground">Task Detail</SheetTitle>
-                        <SheetDescription className="text-body-medium text-muted-foreground">Detail dan status tugas ini.</SheetDescription>
+                        <SheetDescription className="text-body-medium text-muted-foreground">Task detail and status.</SheetDescription>
                     </SheetHeader>
                     {selectedTask && (
                         <div className="p-6 space-y-6">
                             <div>
                                 <h3 className="text-title-medium font-medium text-foreground">{selectedTask.title}</h3>
                                 <p className="text-body-medium text-muted-foreground/60 mt-2 leading-relaxed">
-                                    {selectedTask.description || "Tidak ada deskripsi rinci untuk tugas ini."}
+                                    {selectedTask.description || "No detailed description for this task."}
                                 </p>
                             </div>
                             <div className="grid grid-cols-2 gap-4 text-sm bg-muted p-4 rounded-xl border border-border">
@@ -184,7 +147,7 @@ export default function MyTasksPage() {
                                     </Badge>
                                 </div>
                                 <div>
-                                    <span className="text-label-small font-medium text-muted-foreground/40 block mb-1.5 uppercase tracking-[0.05em]">Tenggat Waktu</span>
+                                    <span className="text-label-small font-medium text-muted-foreground/40 block mb-1.5 uppercase tracking-[0.05em]">Deadline</span>
                                     <span className="flex items-center gap-1.5 font-medium text-foreground text-label-large">
                                         <Calendar size={13} className="text-muted-foreground/30" />
                                         {selectedTask.dueDate ? formatDate(selectedTask.dueDate) : "-"}
@@ -199,7 +162,7 @@ export default function MyTasksPage() {
                                     onClick={() => handleMarkDone(selectedTask.id)}
                                 >
                                     <CheckCircle2 size={16} className="mr-2" />
-                                    {selectedTask.status === "done" ? "Tugas Sudah Selesai" : "Selesai (Mark complete)"}
+                                    {selectedTask.status === "done" ? "Task Completed" : "Completed (Mark complete)"}
                                 </Button>
                             </div>
                         </div>

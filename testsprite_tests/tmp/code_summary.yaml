@@ -1,117 +1,64 @@
 version: "2"
-type: frontend
+type: backend
 tech_stack:
   - TypeScript
-  - Next.js
-  - React
-  - Tailwind CSS
-routes:
-  - path: /login
-    file: app/(auth)/login/page.tsx
-    auth_required: false
-    description: User login page
-  - path: /register
-    file: app/(auth)/register/page.tsx
-    auth_required: false
-    description: User registration page
-  - path: /
-    file: app/(dashboard)/page.tsx
-    auth_required: true
-    description: Main dashboard page
-  - path: /board
-    file: app/(dashboard)/board/page.tsx
-    auth_required: true
-    description: Board view page
-  - path: /my-tasks
-    file: app/(dashboard)/my-tasks/page.tsx
-    auth_required: true
-    description: My tasks tracking page
-  - path: /projects
-    file: app/(dashboard)/projects/page.tsx
-    auth_required: true
-    description: Projects list and management page
-  - path: /settings
-    file: app/(dashboard)/settings/page.tsx
-    auth_required: true
-    description: User and system settings page
+  - Next.js (App Router)
+  - Drizzle ORM
+  - SQLite
 features:
-  - name: User Login
-    description: Login with credentials
+  - name: Auth API
+    description: Unified authentication endpoint for login, register, and logout.
     files:
-      - app/(auth)/login/page.tsx
-    entry_route: /login
-    user_interactions:
-      - Fill email input field
-      - Fill password input field
-      - Click Login button to submit
-    api_calls:
+      - app/api/auth/route.ts
+    endpoints:
       - method: POST
-        endpoint: /api/auth/login
-    auth_required: false
-  - name: User Registration
-    description: Register a new account
+        path: /api/auth
+        description: Perform auth actions (login, register, logout)
+        auth_required: false
+        request_schema:
+          body:
+            action: string (login|register|logout)
+            email: string
+            password: string
+            name?: string
+        response_schema:
+          "200": User or Success
+          "201": User (Registration)
+          "400": Validation Error
+          "401": Unauthorized
+          "409": Conflict
+  - name: Project Management API
+    description: CRUD operations for project resources including members, tasks, and tags.
     files:
-      - app/(auth)/register/page.tsx
-    entry_route: /register
-    user_interactions:
-      - Fill registration details
-      - Click Register button to submit
-    api_calls:
-      - method: POST
-        endpoint: /api/auth/register
-    auth_required: false
-  - name: Dashboard Viewing
-    description: View overall metrics and dashboard widgets
-    files:
-      - app/(dashboard)/page.tsx
-    entry_route: /
-    user_interactions:
-      - View charts and data
-      - Interact with widgets
-    api_calls: []
-    auth_required: true
-  - name: Board Management
-    description: Kanban style board for tasks
-    files:
-      - app/(dashboard)/board/page.tsx
-    entry_route: /board
-    user_interactions:
-      - Drag and drop tasks
-      - Create new tasks
-      - Update task status
-    api_calls: []
-    auth_required: true
-  - name: My Tasks
-    description: View assigned tasks
-    files:
-      - app/(dashboard)/my-tasks/page.tsx
-    entry_route: /my-tasks
-    user_interactions:
-      - View task list
-      - Filter tasks
-      - Mark tasks as complete
-    api_calls: []
-    auth_required: true
-  - name: Project Management
-    description: View and manage projects
-    files:
-      - app/(dashboard)/projects/page.tsx
-    entry_route: /projects
-    user_interactions:
-      - View list of projects
-      - Click project to see details
-      - Create new project
-    api_calls: []
-    auth_required: true
-  - name: Settings
-    description: Configure application settings
-    files:
-      - app/(dashboard)/settings/page.tsx
-    entry_route: /settings
-    user_interactions:
-      - Update profile
-      - Modify preferences
-      - Save settings
-    api_calls: []
-    auth_required: true
+      - app/api/projects/[id]/route.ts
+      - lib/db/schema.ts
+    endpoints:
+      - method: GET
+        path: /api/projects/[id]
+        description: Fetch project details including members, tasks, and progress.
+        auth_required: true
+        response_schema:
+          "200": ProjectDetail
+          "404": Error
+      - method: PUT
+        path: /api/projects/[id]
+        description: Update project metadata and tags.
+        auth_required: true
+        request_schema:
+          body:
+            title: string
+            description: string
+            color: string
+            streamId: string
+            tags: string[]
+        response_schema:
+          "200": Project
+          "500": Error
+      - method: DELETE
+        path: /api/projects/[id]
+        description: Delete a project.
+        auth_required: true
+        response_schema:
+          "200": Success
+          "500": Error
 known_limitations: []

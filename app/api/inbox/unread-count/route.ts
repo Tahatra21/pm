@@ -1,6 +1,4 @@
 import { db } from "@/lib/db";
-import { inboxMessages } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -14,21 +12,12 @@ export async function GET() {
         const user = await getSession(token);
         if (!user) return NextResponse.json({ count: 0 });
 
-        const unreadCount = await db.select({ count: sql`count(*)` })
-            .from(inboxMessages)
-            .where(
-                and(
-                    eq(inboxMessages.receiverId, user.id),
-                    eq(inboxMessages.status, "unread")
-                )
-            );
-
-        // Drizzle sql count returns as string or object depending on driver, 
-        // but for pg-core usually we need to handle it or use a simpler approach if possible
-        const count = await db.$count(inboxMessages, and(
-            eq(inboxMessages.receiverId, user.id),
-            eq(inboxMessages.status, "unread")
-        ));
+        const count = await db.tbl_inbox_messages.count({
+            where: {
+                receiverId: user.id,
+                status: "unread"
+            }
+        });
 
         return NextResponse.json({ count });
     } catch (error) {

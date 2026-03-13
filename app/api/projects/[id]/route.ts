@@ -1,6 +1,4 @@
 import { db } from "@/lib/db";
-import { projects, projectMembers, tasks, projectTagRelations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateProgress } from "@/lib/utils";
 import { randomUUID } from "crypto";
@@ -9,22 +7,25 @@ import { randomUUID } from "crypto";
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        const projResult = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
-        const project = projResult[0];
-        if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        const project = await db.tbl_projects.findUnique({
+            where: { id },
+            include: {
+                project_members: { select: { userId: true } },
+                tasks: true,
+                project_tag_relations: { select: { tagId: true } },
+            }
+        });
 
-        const members = await db.select({ userId: projectMembers.userId }).from(projectMembers).where(eq(projectMembers.projectId, id));
-        const allTasks = await db.select().from(tasks).where(eq(tasks.projectId, id));
-        const tags = await db.select({ tagId: projectTagRelations.tagId }).from(projectTagRelations).where(eq(projectTagRelations.projectId, id));
+        if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
         return NextResponse.json({
             ...project,
-            members: members.map((m: any) => m.userId),
-            tags: tags.map((t: any) => t.tagId),
-            taskCount: allTasks.length,
-            completedCount: allTasks.filter((t: any) => t.status === "done").length,
-            progress: calculateProgress(allTasks as any),
-            tasks: allTasks,
+            members: project.project_members.map((m: any) => m.userId),
+            tags: project.project_tag_relations.map((t: any) => t.tagId),
+            taskCount: project.tasks.length,
+            completedCount: project.tasks.filter((t: any) => t.status === "done").length,
+            progress: calculateProgress(project.tasks as any),
+            tasks: project.tasks,
         });
     } catch (error: any) {
         console.error("API ERROR:", error);
@@ -39,30 +40,42 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const body = await request.json();
         const { title, description, color, streamId, tags } = body;
 
-        await db.update(projects).set({
+        const updateData: any = {
             ...(title !== undefined && { title }),
             ...(description !== undefined && { description }),
             ...(color !== undefined && { color }),
             ...(streamId !== undefined && { streamId }),
             updatedAt: new Date(),
-        }).where(eq(projects.id, id));
+        };
 
         if (tags !== undefined && Array.isArray(tags)) {
-            await db.delete(projectTagRelations).where(eq(projectTagRelations.projectId, id));
-            for (const tagId of tags) {
-                await db.insert(projectTagRelations).values({ id: randomUUID(), projectId: id, tagId });
-            }
+            // Use transaction for tag updates
+            await db.$transaction([
+                db.tbl_project_tag_relations.deleteMany({ where: { projectId: id } }),
+                db.tbl_project_tag_relations.createMany({
+                    data: tags.map(tagId => ({
+                        id: randomUUID(),
+                        projectId: id,
+                        tagId,
+                    }))
+                })
+            ]);
         }
 
-        const updatedResult = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
-        const updated = updatedResult[0];
-        const currentTags = await db.select({ tagId: projectTagRelations.tagId }).from(projectTagRelations).where(eq(projectTagRelations.projectId, id));
+        const updated = await db.tbl_projects.update({
+            where: { id },
+            data: updateData,
+            include: {
+                project_tag_relations: { select: { tagId: true } }
+            }
+        });
 
         return NextResponse.json({
             ...updated,
-            tags: currentTags.map((t: any) => t.tagId)
+            tags: updated.project_tag_relations.map((t: any) => t.tagId)
         });
     } catch (error: any) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
     }
 }
@@ -71,9 +84,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        await db.delete(projects).where(eq(projects.id, id));
+        await db.tbl_projects.delete({
+            where: { id }
+        });
         return NextResponse.json({ success: true });
     } catch (error: any) {
+        console.error(error);
         return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
     }
 }

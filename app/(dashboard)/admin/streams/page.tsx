@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/layout/header";
-import { Plus, MoreHorizontal, Pencil, Trash2, Ship, Info } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, Ship, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface Stream {
@@ -29,16 +30,28 @@ export default function MasterStreamPage() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editor, setEditor] = useState<Partial<Stream> | null>(null);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(5);
+    const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
-    const fetchStreams = async () => {
+    const fetchStreams = async (pageNum = page) => {
+        setLoading(true);
         try {
-            const res = await fetch("/api/admin/streams");
-            const data = await res.json();
-            if (Array.isArray(data)) setStreams(data);
+            const res = await fetch(`/api/admin/streams?page=${pageNum}&limit=${limit}`);
+            const json = await res.json();
+            if (json.data) {
+                setStreams(json.data);
+                setMeta(json.meta);
+            }
         } catch (error) {} finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchStreams(); }, []);
+    useEffect(() => { fetchStreams(); }, [page, limit]);
+
+    const handleLimitChange = (val: string) => {
+        setLimit(parseInt(val));
+        setPage(1);
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -153,6 +166,50 @@ export default function MasterStreamPage() {
                             </TableBody>
                         </Table>
                     </Card>
+
+                    <div className="flex items-center justify-between px-2 pt-4">
+                        <div className="flex items-center gap-4">
+                            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                                Showing <span className="text-foreground">{streams.length}</span> of <span className="text-foreground">{meta.total}</span> items
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none">Rows per page</span>
+                                <Select value={limit.toString()} onValueChange={handleLimitChange}>
+                                    <SelectTrigger className="h-8 w-[70px] rounded-lg border-border bg-card text-[11px] font-bold focus:ring-0 shadow-sm">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-border shadow-xl">
+                                        {[5, 10, 20, 50].map(v => (
+                                            <SelectItem key={v} value={v.toString()} className="text-[11px] font-bold rounded-lg">{v}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-10 w-10 rounded-xl border-border bg-card shadow-sm hover:bg-muted"
+                                disabled={page === 1}
+                                onClick={() => setPage(page - 1)}
+                            >
+                                <ChevronLeft size={16} />
+                            </Button>
+                            <div className="bg-card border border-border rounded-xl h-10 px-4 flex items-center justify-center text-xs font-black min-w-[50px] shadow-sm">
+                                {page} / {meta.totalPages}
+                            </div>
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-10 w-10 rounded-xl border-border bg-card shadow-sm hover:bg-muted"
+                                disabled={page >= meta.totalPages}
+                                onClick={() => setPage(page + 1)}
+                            >
+                                <ChevronRight size={16} />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -21,8 +21,8 @@ export function CommandPalette() {
 
     useEffect(() => {
         if (open) {
-            fetch("/api/projects").then(r => r.json()).then(data => { if (Array.isArray(data)) setProjects(data); }).catch(() => {});
-            fetch("/api/tasks").then(r => r.json()).then(data => { if (Array.isArray(data)) setTasks(data); }).catch(() => {});
+            fetch("/api/projects").then(r => r.json()).then(data => { if (Array.isArray(data)) setProjects(data); }).catch(() => { });
+            fetch("/api/tasks").then(r => r.json()).then(data => { if (Array.isArray(data)) setTasks(data); }).catch(() => { });
         }
     }, [open]);
 
@@ -51,41 +51,41 @@ export function CommandPalette() {
 
     return (
         <CommandDialog open={open} onOpenChange={setOpen}>
-            <CommandInput placeholder="Ketik perintah atau cari..." />
+            <CommandInput placeholder="Type a command or search..." />
             <CommandList>
-                <CommandEmpty>Tidak ada hasil ditemukan.</CommandEmpty>
+                <CommandEmpty>No results found.</CommandEmpty>
 
-                <CommandGroup heading="Navigasi">
+                <CommandGroup heading="Navigation">
                     <CommandItem onSelect={() => runCommand(() => router.push("/"))}>
                         <Search className="mr-2 h-4 w-4" />
                         <span>Dashboard</span>
                     </CommandItem>
                     <CommandItem onSelect={() => runCommand(() => router.push("/my-tasks"))}>
                         <CheckSquare className="mr-2 h-4 w-4" />
-                        <span>Tugas Saya</span>
+                        <span>My Tasks</span>
                     </CommandItem>
                     <CommandItem onSelect={() => runCommand(() => router.push("/projects"))}>
                         <FolderOpen className="mr-2 h-4 w-4" />
-                        <span>Proyek</span>
+                        <span>Projects</span>
                     </CommandItem>
                     <CommandItem onSelect={() => runCommand(() => router.push("/settings"))}>
                         <Settings className="mr-2 h-4 w-4" />
-                        <span>Pengaturan</span>
+                        <span>Settings</span>
                     </CommandItem>
                 </CommandGroup>
 
                 <CommandSeparator />
 
-                <CommandGroup heading="Aksi Cepat">
+                <CommandGroup heading="Quick Actions">
                     <CommandItem onSelect={() => runCommand(() => router.push("/projects"))}>
                         <FolderOpen className="mr-2 h-4 w-4" />
-                        <span>Buat Proyek Baru</span>
+                        <span>Create New Project</span>
                     </CommandItem>
                 </CommandGroup>
 
                 <CommandSeparator />
 
-                <CommandGroup heading="Proyek Aktif">
+                <CommandGroup heading="Active Projects">
                     {projects.slice(0, 4).map((p) => (
                         <CommandItem key={p.id} onSelect={() => runCommand(() => router.push(`/board/${p.id}`))}>
                             <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: p.color }} />
@@ -96,7 +96,7 @@ export function CommandPalette() {
 
                 <CommandSeparator />
 
-                <CommandGroup heading="Tugas Terbaru">
+                <CommandGroup heading="Recent Tasks">
                     {tasks.slice(0, 5).map((t) => (
                         <CommandItem key={t.id} onSelect={() => runCommand(() => router.push(`/board/${t.projectId}`))}>
                             <CheckSquare className="mr-2 h-4 w-4 text-muted-foreground" />

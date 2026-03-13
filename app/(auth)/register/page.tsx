@@ -24,11 +24,11 @@ export default function RegisterPage() {
         setSuccess(false);
 
         if (!name || !email || !pwd || !confirmPwd) {
-            setError("Semua field wajib diisi.");
+            setError("All fields are required.");
             return;
         }
-        if (pwd !== confirmPwd) { setError("Password dan konfirmasi tidak cocok."); return; }
-        if (pwd.length < 8) { setError("Password minimal 8 karakter."); return; }
+        if (pwd !== confirmPwd) { setError("Passwords do not match."); return; }
+        if (pwd.length < 8) { setError("Password must be at least 8 characters."); return; }
 
         setLoading(true);
         try {
@@ -40,7 +40,7 @@ export default function RegisterPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || "Gagal mendaftar.");
+                setError(data.error || "Failed to register.");
                 setLoading(false);
                 return;
             }
@@ -50,7 +50,7 @@ export default function RegisterPage() {
                 window.location.href = "/login";
             }, 2000);
         } catch (err) {
-            setError("Terjadi kesalahan jaringan.");
+            setError("Network error occurred.");
             setLoading(false);
         }
     };
@@ -68,15 +68,15 @@ export default function RegisterPage() {
 
                 <div className="space-y-4">
                     <blockquote className="text-xl font-semibold leading-snug tracking-tight">
-                        "Bergabunglah dengan tim Anda dan mulai kelola proyek dengan lebih efisien."
+                        "Join your team and start managing projects more efficiently."
                     </blockquote>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                        Daftarkan akun Anda untuk mengakses semua fitur manajemen proyek internal.
+                        Register your account to access all internal project management features.
                     </p>
                 </div>
 
                 <div className="space-y-3">
-                    {["Manajemen tugas terstruktur", "Kolaborasi tim real-time", "Monitoring progres proyek", "Integrasi Git & Calendar"].map((f) => (
+                    {["Structured task management", "Real-time team collaboration", "Project progress monitoring", "Git & Calendar integration"].map((f) => (
                         <div key={f} className="flex items-center gap-2.5 text-sm text-muted-foreground">
                             <span className="w-2 h-2 rounded-full bg-primary" />
                             {f}
@@ -97,8 +97,8 @@ export default function RegisterPage() {
                         <span className="text-sm font-semibold">ProjectFlow</span>
                     </div>
 
-                    <h1 className="text-2xl font-semibold tracking-tight mb-1">Buat akun baru</h1>
-                    <p className="text-sm text-muted-foreground mb-8">Daftarkan diri Anda ke dalam sistem internal.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight mb-1">Create new account</h1>
+                    <p className="text-sm text-muted-foreground mb-8">Register yourself to the internal system.</p>
 
                     {error && (
                         <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
@@ -107,14 +107,14 @@ export default function RegisterPage() {
                     )}
                     {success && (
                         <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary">
-                            Registrasi berhasil! Mengalihkan ke halaman login...
+                            Registration successful! Redirecting to login...
                         </div>
                     )}
 
                     <form onSubmit={handleRegister} className="space-y-4">
                         <div className="space-y-2">
-                            <Label className="text-xs">Nama Lengkap</Label>
-                            <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama Anda" autoFocus />
+                            <Label className="text-xs">Full Name</Label>
+                            <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" autoFocus />
                         </div>
                         <div className="space-y-2">
                             <Label className="text-xs">Email</Label>
@@ -123,25 +123,25 @@ export default function RegisterPage() {
                         <div className="space-y-2">
                             <Label className="text-xs">Password</Label>
                             <div className="relative">
-                                <Input type={showPwd ? "text" : "password"} value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="Minimal 8 karakter" className="pr-10" />
+                                <Input type={showPwd ? "text" : "password"} value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="At least 8 characters" className="pr-10" />
                                 <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                                     {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                                 </button>
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-xs">Konfirmasi Password</Label>
-                            <Input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="Ulangi password" />
+                            <Label className="text-xs">Confirm Password</Label>
+                            <Input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="Repeat password" />
                         </div>
 
                         <Button type="submit" disabled={loading} className="w-full h-10 gap-2 shadow-sm mt-2">
-                            {loading ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <>Daftar Sekarang <ArrowRight size={14} /></>}
+                            {loading ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <>Register Now <ArrowRight size={14} /></>}
                         </Button>
                     </form>
 
                     <p className="text-center text-sm text-muted-foreground mt-6">
-                        Sudah punya akun?{" "}
-                        <Link href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">Masuk di sini</Link>
+                        Already have an account?{" "}
+                        <Link href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">Login here</Link>
                     </p>
                 </div>
             </div>
